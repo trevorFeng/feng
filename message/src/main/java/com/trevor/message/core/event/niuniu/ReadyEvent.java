@@ -74,7 +74,6 @@ public class ReadyEvent extends BaseEvent implements Event {
                 scheduleDispatch.removeCountDown(roomId);
                 taskQueue.addTask(roomId ,);
                 actuator.addEvent(new FaPai4Event(roomId, runingNum));
-
             }
 
             //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时

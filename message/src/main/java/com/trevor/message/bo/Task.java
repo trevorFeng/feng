@@ -36,6 +36,11 @@ public class Task {
     private Integer xiaZhuBeiShu;
 
     /**
+     * 牛牛倒计时的标志
+     */
+    private String niuniuCountDownFg;
+
+    /**
      * 倒计时的时间
      */
     private Integer countDown;
