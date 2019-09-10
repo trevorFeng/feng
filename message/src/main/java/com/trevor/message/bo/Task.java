@@ -6,7 +6,7 @@ import lombok.Data;
 public class Task {
 
     /**
-     * 游戏类型
+     * 游戏类型  1为13人牛牛，2为10人牛牛，3为6人牛牛 ，4为金花
      */
     private String roomType;
 
@@ -44,6 +44,15 @@ public class Task {
      * 倒计时的时间
      */
     private Integer countDown;
+
+    public static Task getNiuniuCountDown(Integer time ,String roomId ,String roomType){
+        Task task = new Task();
+        task.setRoomId(roomId);
+        task.setCountDown(time);
+        task.setFlag(TaskFlag.COUNT_DOWN);
+        task.setRoomType(roomType);
+        return task;
+    }
 
     public Task getNiuniuReadyTask(){
 

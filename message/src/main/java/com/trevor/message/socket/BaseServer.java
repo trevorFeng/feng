@@ -2,8 +2,13 @@ package com.trevor.message.socket;
 
 import com.trevor.common.dao.mysql.FriendManageMapper;
 import com.trevor.common.service.RedisService;
+import com.trevor.message.feign.FriendManageFeignResult;
+import com.trevor.message.feign.RoomFeignResult;
+import com.trevor.message.feign.UserFeignResult;
+import com.trevor.message.service.NiuniuService;
 import com.trevor.message.service.PlayService;
 import com.trevor.message.service.RoomSocketService;
+import com.trevor.message.service.SocketService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -15,15 +20,15 @@ import javax.annotation.Resource;
 @Component
 public class BaseServer {
 
-    protected static UserService userService;
+    protected static UserFeignResult userFeignResult;
 
-    protected static RoomSocketService roomSocketService;
+    protected static SocketService socketService;
 
-    protected static PlayService playService;
+    protected static NiuniuService niuniuService;
 
-    protected static RoomService roomService;
+    protected static RoomFeignResult roomFeignResult;
 
-    protected static FriendManageMapper friendManageMapper;
+    protected static FriendManageFeignResult friendManageFeignResult;
 
     protected static RedisService redisService;
 
@@ -34,23 +39,23 @@ public class BaseServer {
 
 
     @Resource
-    public void setPlayService(PlayService playService){
-        BaseServer.playService = playService;
+    public void setPlayService(FriendManageFeignResult friendManageFeignResult){
+        BaseServer.friendManageFeignResult = friendManageFeignResult;
     }
 
     @Resource
-    public void setUserService(UserService userService){
-        BaseServer.userService = userService;
+    public void setUserService(UserFeignResult userFeignResult){
+        BaseServer.userFeignResult = userFeignResult;
     }
 
     @Resource
-    public void setRoomSocketService(RoomSocketService roomSocketService){
-        BaseServer.roomSocketService = roomSocketService;
+    public void setRoomSocketService(SocketService socketService){
+        BaseServer.socketService = socketService;
     }
 
     @Resource
-    public void setRoomService(RoomService roomService){
-        BaseServer.roomService = roomService;
+    public void setRoomFeignResult(RoomFeignResult roomFeignResult){
+        BaseServer.roomFeignResult = roomFeignResult;
     }
 
 }

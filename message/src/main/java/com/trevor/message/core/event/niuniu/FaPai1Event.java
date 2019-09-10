@@ -9,9 +9,10 @@ import com.trevor.common.enums.NiuNiuPaiXingEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
 import com.trevor.common.util.PokeUtil;
-import com.trevor.message.core.ListenerKey;
+import com.trevor.message.bo.NiuniuData;
+import com.trevor.message.bo.RoomData;
+import com.trevor.message.bo.Task;
 import com.trevor.message.core.event.Event;
-import com.trevor.message.core.listener.niuniu.CountDownListener;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,14 +20,12 @@ import java.util.stream.Collectors;
 /**
  * 发一张牌
  */
-public class FaPai1Event extends Event {
+public class FaPai1Event implements Event {
 
-    public FaPai1Event(String roomId) {
-        super.roomId = roomId;
-    }
 
     @Override
-    protected void executeEvent() {
+    public void execute(RoomData roomData , Task task) {
+        NiuniuData data = (NiuniuData) roomData;
         Map<String ,String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
         List<Integer> paiXingList = JsonUtil.parseJavaList(baseRoomInfoMap.get(RedisConstant.PAI_XING) ,Integer.class);
         Integer rule = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.RULE));

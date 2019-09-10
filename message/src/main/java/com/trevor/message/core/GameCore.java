@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
-public class Core {
+public class GameCore {
 
     /**
      * 全部房间的游戏数据
@@ -37,9 +37,9 @@ public class Core {
     }
 
     public void execut(Task task){
-        if (Objects.equals(task.getGameType() , GameType.NIUNIN)) {
+        if (Objects.equals(task.getRoomType() , GameType.NIUNIN)) {
             executNiuniu(task);
-        }else if (Objects.equals(task.getGameType() ,GameType.JINHUA)) {
+        }else if (Objects.equals(task.getRoomType() ,GameType.JINHUA)) {
 
         }
     }

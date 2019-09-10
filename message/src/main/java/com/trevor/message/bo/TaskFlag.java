@@ -1,10 +1,10 @@
 package com.trevor.message.bo;
 
-public enum TaskFlag {
+public class TaskFlag {
 
-    JOIN_ROOM,
-    READY,
-    COUNT_DOWN,
+    public final static String JOIN_ROOM = "JOIN_ROOM";
 
+    public final static String READY = "READY";
 
+    public final static String COUNT_DOWN = "COUNT_DOWN";
 }

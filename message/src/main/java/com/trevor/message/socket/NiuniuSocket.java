@@ -14,6 +14,7 @@ import com.trevor.common.enums.SpecialEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
 import com.trevor.common.util.ObjectUtil;
+import com.trevor.common.util.TokenUtil;
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.decoder.NiuniuDecoder;
 import com.trevor.message.encoder.NiuniuEncoder;
@@ -56,8 +57,7 @@ public class NiuniuSocket extends BaseServer {
     @OnOpen
     public void onOpen(Session session, @PathParam("roomId") String roomId) {
         //roomId合法性检查
-        Long roomIdLong = Long.valueOf(roomId);
-        Room room = roomService.findOneById(roomIdLong);
+        Room room = roomFeignResult.findRoomById(roomId);
         if (room == null) {
             directSendMessage(new SocketResult(507) ,session);
             close(session);
@@ -77,13 +77,13 @@ public class NiuniuSocket extends BaseServer {
             return;
         }
         String token = session.getRequestParameterMap().get(WebKeys.TOKEN).get(0);
-        User user = userService.getUserByToken(token);
+        Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
+        User user = userFeignResult.findByOpenId((String) claims.get(WebKeys.OPEN_ID) ,(String) claims.get("hash"));
         if (ObjectUtil.isEmpty(user)) {
             directSendMessage(new SocketResult(404) ,session);
             close(session);
             return;
         }
-
         SocketResult soc = checkRoom(room ,user);
         if (soc.getHead() != null) {
             directSendMessage(soc ,session);
@@ -191,7 +191,7 @@ public class NiuniuSocket extends BaseServer {
     public void directSendMessage(SocketResult pack , Session s) {
         RemoteEndpoint.Async async = s.getAsyncRemote();
         if (s.isOpen()) {
-            async.sendText(JsonUtil.toJsonString(pack));
+            async.sendObject(pack);
         } else {
             close(s);
         }
@@ -247,15 +247,15 @@ public class NiuniuSocket extends BaseServer {
 
     private SocketResult checkRoom(Room room , User user){
         //房主是否开启好友管理功能
-        Boolean isFriendManage = Objects.equals(userService.isFriendManage(room.getRoomAuth()) , FriendManageEnum.YES.getCode());
+        Boolean isFriendManage = Objects.equals(userFeignResult.isFriendManage(room.getRoomAuth()) , Boolean.TRUE);
         List<Integer> special = JsonUtil.parseJavaList(redisService.getHashValue(RedisConstant.BASE_ROOM_INFO , RedisConstant.SPECIAL), Integer.class);
         //开通
         if (isFriendManage) {
             //配置仅限好友
             if (special.contains(SpecialEnum.JUST_FRIENDS.getCode())) {
-                Long count = friendManageMapper.countRoomAuthFriendAllow(room.getRoomAuth(), user.getId());
+                Boolean aBoolean = friendManageFeignResult.findRoomAuthFriendAllow(room.getRoomAuth(), user.getId());
                 //不是房主的好友
-                if (Objects.equals(count ,0L)) {
+                if (!aBoolean) {
                     return new SocketResult(508);
                     //是房主的好友
                 }else {

@@ -9,6 +9,8 @@ import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.PokeUtil;
 import com.trevor.common.util.RandomUtils;
+import com.trevor.message.bo.RoomData;
+import com.trevor.message.bo.Task;
 import com.trevor.message.core.ListenerKey;
 import com.trevor.message.core.event.Event;
 import com.trevor.message.core.listener.niuniu.CountDownListener;
@@ -17,16 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class FaPai4Event extends Event {
-
-
-    public FaPai4Event(String roomId ,String runingNum) {
-        super.roomId = roomId;
-        super.runingNum = runingNum;
-    }
+public class FaPai4Event implements Event {
 
     @Override
-    protected void executeEvent() {
+    public void execute(RoomData roomData , Task task) {
         //生成牌
         List<List<String>> pokesList = getPokesList();
         //设置每个人的牌

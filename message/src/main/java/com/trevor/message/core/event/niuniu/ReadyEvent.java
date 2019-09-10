@@ -6,11 +6,14 @@ import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
+import com.trevor.message.bo.ListenerKey;
 import com.trevor.message.bo.NiuniuData;
 import com.trevor.message.bo.RoomData;
 import com.trevor.message.bo.Task;
 import com.trevor.message.core.event.BaseEvent;
 import com.trevor.message.core.event.Event;
+import com.trevor.message.core.schedule.CountDownImpl;
+import com.trevor.message.core.schedule.CountDownListener;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -69,17 +72,14 @@ public class ReadyEvent extends BaseEvent implements Event {
             Integer readyPlayerSize = data.getReadyPlayMap().get(runingNum).size();
             Integer realPlayerSize = data.getRealPlayers().size();
 
-            //如果准备得玩家等于真正玩家得人数，则移除监听器,直接开始发牌
-            if (Objects.equals(readyPlayerSize, realPlayerSize)) {
-                scheduleDispatch.removeCountDown(roomId);
-                taskQueue.addTask(roomId ,);
-                actuator.addEvent(new FaPai4Event(roomId, runingNum));
-            }
-
-            //判断房间里真正玩家的人数，如果只有两人，直接开始游戏，否则开始倒计时
             if (readyPlayerSize == 2 && realPlayerSize > 2) {
                 //注册准备倒计时监听器
-                scheduleDispatch.addListener(new CountDownListener(ListenerKey.getReadyKey(roomId, runingNum, 5) + roomId));
+                scheduleDispatch.addCountDown(new CountDownImpl());
+            } else if (Objects.equals(readyPlayerSize, realPlayerSize) && readyPlayerSize >= 2) {
+                scheduleDispatch.removeCountDown(roomId);
+                Task fapai4Task = new Task();
+                taskQueue.addTask(roomId ,fapai4Task);
+                return;
             }
         }
 

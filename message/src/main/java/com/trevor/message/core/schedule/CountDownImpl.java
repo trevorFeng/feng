@@ -34,11 +34,7 @@ public class CountDownImpl implements CountDownListener{
     @Override
     public void onCountDown() {
         if (time > 0) {
-            Task task = new Task();
-            task.setRoomId(roomId);
-            task.setCountDown(time);
-            task.setFlag(TaskFlag.COUNT_DOWN.toString());
-            task.setRoomType(roomType);
+            Task task = Task.getNiuniuCountDown(time ,roomId ,roomType);
             taskQueue.addTask(roomId ,task);
             time--;
         }

@@ -1,7 +1,9 @@
 package com.trevor.message.bo;
 
-public enum GameType {
-    NIUNIN,
+public class GameType {
 
-    JINHUA,
+    public final static String NIUNIN = "NIUNIN";
+
+    public final static String JINHUA = "JINHUA";
+
 }

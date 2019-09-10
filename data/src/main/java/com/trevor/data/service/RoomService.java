@@ -1,7 +1,7 @@
 package com.trevor.data.service;
 
-import com.trevor.common.dao.mysql.RoomMapper;
 import com.trevor.common.domain.mysql.Room;
+import com.trevor.data.dao.mysql.RoomMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
