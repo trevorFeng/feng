@@ -45,6 +45,25 @@ public class Task {
      */
     private Integer countDown;
 
+    /**
+     * 是否开启好友管理
+     */
+    private Boolean isFriendManage;
+
+    /**
+     * 加入房间的玩家是否是房主的好友
+     */
+    private Boolean roomAuthFriendAllow;
+
+    public static Task getNiuniuJoinRoom(String roomId , String roomType , Boolean isFriendManage ,Boolean roomAuthFriendAllow){
+        Task task = new Task();
+        task.setRoomId(roomId);
+        task.setFlag(TaskFlag.COUNT_DOWN);
+        task.setIsFriendManage(isFriendManage);
+        task.setRoomType(roomType);
+        return task;
+    }
+
     public static Task getNiuniuCountDown(Integer time ,String roomId ,String roomType){
         Task task = new Task();
         task.setRoomId(roomId);
@@ -60,6 +79,6 @@ public class Task {
     }
 
     public Task getNiuniuFaPai1Task(){
-        
+        return null;
     }
 }

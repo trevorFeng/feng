@@ -2,6 +2,7 @@ package com.trevor.message.socket;
 
 import com.trevor.common.dao.mysql.FriendManageMapper;
 import com.trevor.common.service.RedisService;
+import com.trevor.message.core.GameCore;
 import com.trevor.message.feign.FriendManageFeignResult;
 import com.trevor.message.feign.RoomFeignResult;
 import com.trevor.message.feign.UserFeignResult;
@@ -23,6 +24,8 @@ public class BaseServer {
     protected static UserFeignResult userFeignResult;
 
     protected static SocketService socketService;
+
+    protected GameCore gameCore;
 
     protected static NiuniuService niuniuService;
 

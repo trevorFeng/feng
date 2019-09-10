@@ -32,7 +32,7 @@ public class NiuniuData extends RoomData{
     /**
      * 特殊
      */
-    private String special;
+    private List<Integer> special;
 
     /**
      * 牌型类型

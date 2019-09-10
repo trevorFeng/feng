@@ -1,15 +1,13 @@
 package com.trevor.message.core;
 
 import com.google.common.collect.Maps;
-import com.trevor.message.bo.GameType;
-import com.trevor.message.bo.RoomData;
-import com.trevor.message.bo.Task;
-import com.trevor.message.bo.TaskFlag;
+import com.trevor.message.bo.*;
 import com.trevor.message.core.event.niuniu.ReadyEvent;
 import com.trevor.message.game.niuniu.Ready;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -34,6 +32,15 @@ public class GameCore {
 
     public RoomData getRoomData(String roomId){
         return map.get(roomId);
+    }
+
+    /**
+     * 得到牛牛的特殊配置
+     * @param roomId
+     * @return
+     */
+    public List<Integer> getNiuniuSpecial(String roomId){
+        return ((NiuniuData)map.get(roomId)).getSpecial();
     }
 
     public void execut(Task task){

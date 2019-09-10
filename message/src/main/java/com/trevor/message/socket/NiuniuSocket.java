@@ -16,6 +16,7 @@ import com.trevor.common.util.NumberUtil;
 import com.trevor.common.util.ObjectUtil;
 import com.trevor.common.util.TokenUtil;
 import com.trevor.message.bo.SocketMessage;
+import com.trevor.message.bo.Task;
 import com.trevor.message.decoder.NiuniuDecoder;
 import com.trevor.message.encoder.NiuniuEncoder;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.*;
+
 
 
 /**
@@ -84,17 +86,82 @@ public class NiuniuSocket extends BaseServer {
             close(session);
             return;
         }
+        //设置最大不活跃时间
+        session.setMaxIdleTimeout(1000 * 60 * 45);
+        this.roomId = roomId;
+        this.userId = NumberUtil.formatString(user.getId());
+        this.session = session;
+
+        //检查房间规则
+        //是否开通好友管理功能
+        Boolean isFriendManage = userFeignResult.isFriendManage(room.getRoomAuth());
+//        //房间创建是是否包含仅限好友进入
+//        List<Integer> special = gameCore.getNiuniuSpecial(roomId);
+        //玩家是否是房主的好友
+        Boolean roomAuthFriendAllow = friendManageFeignResult.findRoomAuthFriendAllow(room.getRoomAuth(), user.getId());
+        Task task = Task.getNiuniuJoinRoom();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //开通
+        if (isFriendManage) {
+            //配置仅限好友
+            if (special.contains(SpecialEnum.JUST_FRIENDS.getCode())) {
+                //不是房主的好友
+                if (!roomAuthFriendAllow) {
+                    directSendMessage(new SocketResult(508) ,session);
+                    close(session);
+                    return;
+                    //是房主的好友
+                } else {
+                    //允许观战
+                    if (special.contains(SpecialEnum.CAN_SEE.getCode())) {
+
+                    //不允许观战
+                    }else {
+
+                    }
+                    return this.dealCanSee(user, special, room);
+                }
+            }
+            //未配置仅限好友
+            else {
+                return this.dealCanSee(user, special, room);
+            }
+        // 未开通
+        }else {
+            //允许观战
+            if (special.contains(SpecialEnum.CAN_SEE.getCode())) {
+
+            //不允许观战
+            }else {
+                new SocketResult(509);
+            }
+        }
+
+        //检查房间是否满足人数要求
         SocketResult soc = checkRoom(room ,user);
         if (soc.getHead() != null) {
             directSendMessage(soc ,session);
             close(session);
             return;
         }
-        //设置最大不活跃时间
-        session.setMaxIdleTimeout(1000 * 60 * 45);
-        this.roomId = roomId;
-        this.userId = NumberUtil.formatString(user.getId());
-        this.session = session;
         soc.setHead(1000);
         /**
          * 广播新人加入
@@ -294,7 +361,7 @@ public class NiuniuSocket extends BaseServer {
                 socketResult.setIsChiGuaPeople(Boolean.TRUE);
             }
             return socketResult;
-        //不允许观战
+            //不允许观战
         }else {
             if (bo) {
                 socketResult.setIsChiGuaPeople(Boolean.FALSE);
