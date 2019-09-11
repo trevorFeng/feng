@@ -3,7 +3,6 @@ package com.trevor.message.core;
 import com.google.common.collect.Maps;
 import com.trevor.message.bo.*;
 import com.trevor.message.core.event.niuniu.ReadyEvent;
-import com.trevor.message.game.niuniu.Ready;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

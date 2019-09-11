@@ -48,6 +48,15 @@ public class RedisService {
     }
 
     /**
+     * 得到value
+     * @param keys
+     * @return
+     */
+    public List<String> getBatchValue(Set<String> keys){
+        return stringRedisTemplate.opsForValue().multiGet(keys);
+    }
+
+    /**
      * set VALUE
      * @param key
      * @param value

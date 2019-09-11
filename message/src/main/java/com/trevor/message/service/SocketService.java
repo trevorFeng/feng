@@ -119,7 +119,6 @@ public class SocketService {
             s.directSendMessage(new SocketResult(500) ,s.session);
             s.close(s.session);
         }
-        redisService.setAdd(RedisConstant.ROOM_PLAYER + roomId ,socket.userId);
         sockets.put(socket.userId , socket);
     }
 
@@ -136,30 +135,5 @@ public class SocketService {
     }
 
 
-    /**
-     * 得到房间里真正的玩家
-     * @param roomId
-     * @return
-     */
-    public List<Player> getRealRoomPlayerCount(String roomId){
-        Set<String> realUserIds = redisService.getSetMembers(RedisConstant.REAL_ROOM_PLAYER + roomId);
-        List<Long> realUserIdsLong = realUserIds.stream().map(str -> Long.valueOf(str)).collect(Collectors.toList());
-        List<User> realPlayerUsers = userService.findUsersByIds(realUserIdsLong);
 
-        Set<String> guanZhongUserIds = redisService.getSetMembers(RedisConstant.GUANZHONG + roomId);
-        Map<String ,String> totalScoreMap = redisService.getMap(RedisConstant.TOTAL_SCORE + roomId);
-        List<Player> players = Lists.newArrayList();
-        for (User user : realPlayerUsers) {
-            Player player = new Player();
-            player.setUserId(user.getId());
-            player.setName(user.getAppName());
-            player.setPictureUrl(user.getAppPictureUrl());
-            if (guanZhongUserIds.contains(String.valueOf(user.getId()))) {
-                player.setIsGuanZhong(Boolean.TRUE);
-            }
-            players.add(player);
-            player.setTotalScore(totalScoreMap.get(user.getId().toString()) == null ? "0" : totalScoreMap.get(user.getId()));
-        }
-        return players;
-    }
 }

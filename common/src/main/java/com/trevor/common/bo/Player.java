@@ -20,6 +20,6 @@ public class Player {
      */
     private Boolean isGuanZhong;
 
-    private String totalScore;
+    private Integer totalScore;
 
 }

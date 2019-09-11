@@ -93,4 +93,9 @@ public class NiuniuData extends RoomData{
      * 外层key为runingNum,内层key为玩家id，内层value为下注的倍数
      */
     private Map<String ,Map<String ,Integer>> xiaZhuMap;
+
+    /**
+     * 玩家总分
+     */
+    private Map<String ,Integer> totalScoreMap;
 }

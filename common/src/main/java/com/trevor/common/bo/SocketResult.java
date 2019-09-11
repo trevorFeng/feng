@@ -68,7 +68,7 @@ public class SocketResult {
     /**
      * 分数
      */
-    private String totalScore;
+    private Integer totalScore;
 
     /**
      * 观众，玩家可以参与打牌
@@ -115,6 +115,11 @@ public class SocketResult {
      * 已经点击准备的玩家
      */
     private Set<String> readyPlayerIds;
+
+    /**
+     * 下一局准备的顽疾
+     */
+    private Set<String> nextReadyPlayerIds;
 
     /**
      * 玩家的4张牌

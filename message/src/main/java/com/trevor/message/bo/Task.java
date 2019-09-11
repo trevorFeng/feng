@@ -1,24 +1,24 @@
 package com.trevor.message.bo;
 
+import com.trevor.common.domain.mysql.User;
+import com.trevor.message.socket.BaseServer;
+import com.trevor.message.socket.NiuniuSocket;
 import lombok.Data;
 
 @Data
 public class Task {
 
     /**
-     * 游戏类型  1为13人牛牛，2为10人牛牛，3为6人牛牛 ，4为金花
+     * 房间id
      */
-    private String roomType;
+    private String roomId;
+
 
     /**
      * 游戏的任务标志
      */
     private String flag;
 
-    /**
-     * 房间id
-     */
-    private String roomId;
 
     /**
      * 玩家id
@@ -55,12 +55,19 @@ public class Task {
      */
     private Boolean roomAuthFriendAllow;
 
-    public static Task getNiuniuJoinRoom(String roomId , String roomType , Boolean isFriendManage ,Boolean roomAuthFriendAllow){
+    private BaseServer socket;
+
+    private User joinUser;
+
+    public static Task getNiuniuJoinRoom(String roomId , Boolean isFriendManage , Boolean roomAuthFriendAllow , NiuniuSocket socket ,User joinUser){
         Task task = new Task();
-        task.setRoomId(roomId);
-        task.setFlag(TaskFlag.COUNT_DOWN);
-        task.setIsFriendManage(isFriendManage);
-        task.setRoomType(roomType);
+        task.roomId = roomId;
+        task.flag = TaskFlag.JOIN_ROOM;
+        task.playId = String.valueOf(joinUser.getId());
+        task.isFriendManage = isFriendManage;
+        task.roomAuthFriendAllow = roomAuthFriendAllow;
+        task.socket = socket;
+        task.joinUser = joinUser;
         return task;
     }
 
