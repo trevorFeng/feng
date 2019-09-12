@@ -6,14 +6,12 @@ import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
-import com.trevor.message.bo.ListenerKey;
 import com.trevor.message.bo.NiuniuData;
 import com.trevor.message.bo.RoomData;
 import com.trevor.message.bo.Task;
 import com.trevor.message.core.event.BaseEvent;
 import com.trevor.message.core.event.Event;
 import com.trevor.message.core.schedule.CountDownImpl;
-import com.trevor.message.core.schedule.CountDownListener;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -74,10 +72,10 @@ public class ReadyEvent extends BaseEvent implements Event {
 
             if (readyPlayerSize == 2 && realPlayerSize > 2) {
                 //注册准备倒计时监听器
-                scheduleDispatch.addCountDown(new CountDownImpl());
+                scheduleDispatch.addCountDown(new CountDownImpl(roomId ,5));
             } else if (Objects.equals(readyPlayerSize, realPlayerSize) && readyPlayerSize >= 2) {
                 scheduleDispatch.removeCountDown(roomId);
-                Task fapai4Task = new Task();
+                Task fapai4Task = Task.getNiuniuFaPai4Task(roomId);
                 taskQueue.addTask(roomId ,fapai4Task);
                 return;
             }

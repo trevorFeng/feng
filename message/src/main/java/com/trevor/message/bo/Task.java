@@ -71,12 +71,11 @@ public class Task {
         return task;
     }
 
-    public static Task getNiuniuCountDown(Integer time ,String roomId ,String roomType){
+    public static Task getNiuniuCountDown(Integer time ,String roomId){
         Task task = new Task();
         task.setRoomId(roomId);
         task.setCountDown(time);
         task.setFlag(TaskFlag.COUNT_DOWN);
-        task.setRoomType(roomType);
         return task;
     }
 
@@ -85,7 +84,15 @@ public class Task {
         return null;
     }
 
-    public Task getNiuniuFaPai1Task(){
-        return null;
+    public static Task getNiuniuFaPai4Task(String roomId){
+        Task task = new Task();
+        task.roomId = roomId;
+        return task;
+    }
+
+    public static Task getNiuniuFaPai1Task(String roomId){
+        Task task = new Task();
+        task.roomId = roomId;
+        return task;
     }
 }

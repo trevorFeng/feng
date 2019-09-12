@@ -29,12 +29,10 @@ public class CountDownEvent extends BaseEvent implements Event {
         if (Objects.equals(task.getCountDown() ,1)) {
             scheduleDispatch.removeCountDown(task.getRoomId());
         }
-        //加入发一张牌的事件
+        //加入发4张牌的事件
         if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.NIUNIU_READY)) {
-            Task faPai1Task = new Task();
-            faPai1Task.setRoomType(data.getRoomType());
-            faPai1Task.setFlag();
-            taskQueue.addTask(roomId ,faPai1Task);
+            Task faPai4Task = Task.getNiuniuFaPai4Task(roomId);
+            taskQueue.addTask(roomId ,faPai4Task);
         }
     }
 }

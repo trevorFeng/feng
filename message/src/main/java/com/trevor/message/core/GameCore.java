@@ -6,7 +6,6 @@ import com.trevor.message.core.event.niuniu.ReadyEvent;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -33,26 +32,22 @@ public class GameCore {
         return map.get(roomId);
     }
 
-    /**
-     * 得到牛牛的特殊配置
-     * @param roomId
-     * @return
-     */
-    public List<Integer> getNiuniuSpecial(String roomId){
-        return ((NiuniuData)map.get(roomId)).getSpecial();
-    }
 
     public void execut(Task task){
-        if (Objects.equals(task.getRoomType() , GameType.NIUNIN)) {
-            executNiuniu(task);
-        }else if (Objects.equals(task.getRoomType() ,GameType.JINHUA)) {
+        RoomData roomData = getRoomData(task.getRoomId());
+        String roomType = roomData.getRoomType();
+        if (Objects.equals(roomType , GameType.NIUNIN)) {
+            executNiuniu(task ,roomData);
+        }else if (Objects.equals(roomType ,GameType.JINHUA)) {
 
         }
     }
 
-    public void executNiuniu(Task task){
+    public void executNiuniu(Task task ,RoomData roomData){
         if (Objects.equals(task.getFlag() , TaskFlag.READY)) {
-            ready.ready(map.get(task.getRoomId()) ,task);
-        }else if (Objects.equals(task.getFlag() ,))
+            ready.execute(roomData ,task);
+        }else if (Objects.equals(task.getFlag() ,TaskFlag.COUNT_DOWN)){
+
+        }
     }
 }

@@ -9,6 +9,7 @@ import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.PokeUtil;
 import com.trevor.common.util.RandomUtils;
+import com.trevor.message.bo.NiuniuData;
 import com.trevor.message.bo.RoomData;
 import com.trevor.message.bo.Task;
 import com.trevor.message.core.ListenerKey;
@@ -23,6 +24,13 @@ public class FaPai4Event implements Event {
 
     @Override
     public void execute(RoomData roomData , Task task) {
+        NiuniuData data = (NiuniuData) roomData;
+        String runingNum = data.getRuningNum();
+        Map<String, List<String>> pokesMap = data.getPokesMap().get(runingNum);
+        //已经发牌
+        if (pokesMap != null && !pokesMap.isEmpty()) {
+            return;
+        }
         //生成牌
         List<List<String>> pokesList = getPokesList();
         //设置每个人的牌

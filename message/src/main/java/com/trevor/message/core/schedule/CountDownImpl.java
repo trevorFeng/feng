@@ -16,25 +16,19 @@ public class CountDownImpl implements CountDownListener{
     private String roomId;
 
     /**
-     * 房间类型
-     */
-    private String roomType;
-
-    /**
      * 默认为5
      */
     private Integer time = 5;
 
-    public CountDownImpl(String roomId, Integer time ,String roomType) {
+    public CountDownImpl(String roomId, Integer time) {
         this.roomId = roomId;
         this.time = time;
-        this.roomType = roomType;
     }
 
     @Override
     public void onCountDown() {
         if (time > 0) {
-            Task task = Task.getNiuniuCountDown(time ,roomId ,roomType);
+            Task task = Task.getNiuniuCountDown(time ,roomId);
             taskQueue.addTask(roomId ,task);
             time--;
         }
