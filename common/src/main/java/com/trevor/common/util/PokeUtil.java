@@ -89,7 +89,7 @@ public class PokeUtil {
      * @param pokes
      * @return
      */
-    public static PaiXing isNiuNiu(List<String> pokes , List<Integer> paiXingSet , Integer rule){
+    public static PaiXing isNiuNiu(List<String> pokes , Set<Integer> paiXingSet , Integer rule){
         PaiXing paiXing;
         if (paiXingSet == null) {
             paiXingSet = new ArrayList<>();
@@ -228,7 +228,7 @@ public class PokeUtil {
      * @param paiXingSet
      * @return
      */
-    public static PaiXing isNiu_16(List<String> pokes , List<Integer> paiXingSet){
+    public static PaiXing isNiu_16(List<String> pokes , Set<Integer> paiXingSet){
         PaiXing paiXing;
         if (paiXingSet.contains(6)) {
             int num = 0;

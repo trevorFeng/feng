@@ -34,10 +34,16 @@ public class NiuniuData extends RoomData{
      */
     private List<Integer> special;
 
+
     /**
-     * 牌型类型
+     * 1---顺子牛，5倍
+     * 2---五花牛，6倍
+     * 3---同花牛，6倍
+     * 4---葫芦牛，7倍
+     * 5---炸弹牛，8倍
+     * 6---五小牛，10倍
      */
-    private String paiXingType ;
+    private Set<Integer> paiXing;
 
     /**
      * 总局数

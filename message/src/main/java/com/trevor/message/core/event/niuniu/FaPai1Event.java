@@ -27,7 +27,7 @@ public class FaPai1Event implements Event {
     public void execute(RoomData roomData , Task task) {
         NiuniuData data = (NiuniuData) roomData;
         Map<String ,String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
-        List<Integer> paiXingList = JsonUtil.parseJavaList(baseRoomInfoMap.get(RedisConstant.PAI_XING) ,Integer.class);
+        Set<Integer> paiXingSet = data.getPaiXing();
         Integer rule = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.RULE));
         Integer basePoint = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.BASE_POINT));
         Map<String ,PaiXing> paiXingMap = new HashMap<>();
@@ -61,7 +61,7 @@ public class FaPai1Event implements Event {
         scheduleDispatch.addListener(new CountDownListener(ListenerKey.TAI_PAI + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT + ListenerKey.TIME_FIVE));
     }
 
-    private void calcScore(String roomId ,List<Integer> paiXing ,Integer rule ,Integer basePoint
+    private void calcScore(String roomId ,Set<Integer> paiXingSet ,Integer rule ,Integer basePoint
             ,Map<String ,Integer> scoreMap ,Map<String ,PaiXing> paiXingMap){
         //庄家id
         String zhuangJiaUserId = redisService.getValue(RedisConstant.ZHUANGJIA + roomId);
