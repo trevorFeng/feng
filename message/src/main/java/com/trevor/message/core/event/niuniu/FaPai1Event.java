@@ -2,11 +2,9 @@ package com.trevor.message.core.event.niuniu;
 
 import com.google.common.collect.Maps;
 import com.trevor.common.bo.PaiXing;
-import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.enums.NiuNiuPaiXingEnum;
-import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.PokeUtil;
 import com.trevor.message.bo.CountDownFlag;
 import com.trevor.message.bo.NiuniuData;
@@ -31,8 +29,8 @@ public class FaPai1Event extends BaseEvent implements Event {
         String roomId = data.getRoomId();
         String runingNum = data.getRuningNum();
         Map<String ,Integer> scoreMap = new HashMap<>(2<<4);
-        //计算得分,将用户的牌型放入paiXingMap
-        calcScore(roomId ,data ,runingNum);
+        //计算得分,将用户的牌型放入paiXingMap,得分和总分放入scoreMap
+        calcScore(data ,runingNum);
         //改变状态
         data.setGameStatus(GameStatusEnum.FA_ONE_PAI.getCode());
 
@@ -46,8 +44,8 @@ public class FaPai1Event extends BaseEvent implements Event {
 
 
         Map<String ,Integer> playerPaiXingMap = new HashMap<>();
-        for (Map.Entry<String , Integer> entry : data.getPaiXingMap().get(runingNum).entrySet()) {
-            playerPaiXingMap.put(entry.getKey() ,entry.getValue());
+        for (Map.Entry<String , PaiXing> entry : data.getPaiXingMap().get(runingNum).entrySet()) {
+            playerPaiXingMap.put(entry.getKey() ,entry.getValue().getPaixing());
         }
         socketResult.setPaiXing(playerPaiXingMap);
         socketResult.setGameStatus(GameStatusEnum.FA_ONE_PAI.getCode());
@@ -57,7 +55,7 @@ public class FaPai1Event extends BaseEvent implements Event {
         scheduleDispatch.addCountDown(new CountDownImpl(roomId ,5 , CountDownFlag.TAN_PAI));
     }
 
-    private void calcScore(String roomId ,NiuniuData data ,String runingNum){
+    private void calcScore(NiuniuData data ,String runingNum){
         Set<Integer> paiXing = data.getPaiXing();
         Integer rule = data.getRule();
         Integer BasePoint = data.getBasePoint();
@@ -74,42 +72,48 @@ public class FaPai1Event extends BaseEvent implements Event {
         //庄家的牌型
         PaiXing zhuangJiaPaiXing = PokeUtil.isNiuNiu(zhuangJiaPokes , paiXing ,rule);
         Integer zhuangJiaScore = 0;
-        Map<String ,PaiXing> paiXingMap = new HashMap<>();
+        //初始化
+        data.getRuningScoreMap().putIfAbsent(runingNum ,new HashMap<>());
+        Map<String ,Integer> scoreMap = data.getRuningScoreMap().get(runingNum);
+
+        data.getPaiXingMap().put(runingNum ,new HashMap<>());
+        Map<String ,PaiXing> paiXingMap = data.getPaiXingMap().get(runingNum);
         paiXingMap.put(zhuangJiaUserId ,zhuangJiaPaiXing);
+
+        Map<String ,Integer> totalScoreMap = data.getTotalScoreMap();
         //庄家的抢庄倍数
-        Integer zhuangJiaQiangZhuang = qiangZhuangMap.get(zhuangJiaUserId) == null ? 1 : Integer.valueOf(qiangZhuangMap.get(zhuangJiaUserId));
+        Integer zhuangJiaQiangZhuang = qiangZhuangMap.get(zhuangJiaUserId) == null ? 1 : qiangZhuangMap.get(zhuangJiaUserId);
         for (Map.Entry<String ,List<String>> entry : pokesMap.entrySet()) {
             String xianJiaUserId = entry.getKey();
             if (!Objects.equals(xianJiaUserId ,zhuangJiaUserId)) {
                 List<String> xianJiaPokes = entry.getValue();
                 PaiXing xianJiaPaiXing = PokeUtil.isNiuNiu(xianJiaPokes ,paiXing ,rule);
-                redisService.put(RedisConstant.PAI_XING + roomId ,xianJiaUserId ,JsonUtil.toJsonString(xianJiaPaiXing));
+
                 paiXingMap.put(xianJiaUserId ,xianJiaPaiXing);
                 //玩家的下注倍数
-                Integer xianJiaQiangZhu = xianJiaXiaZhuMap.get(xianJiaUserId) == null ? 1 : Integer.valueOf(xianJiaXiaZhuMap.get(xianJiaUserId));
+                Integer xianJiaQiangZhu = xianJiaXiaZhuMap.get(xianJiaUserId) == null ? 1 : xianJiaXiaZhuMap.get(xianJiaUserId);
                 //基本分数
                 Integer score = zhuangJiaQiangZhuang * xianJiaQiangZhu * BasePoint;
                 //闲家的总分
-                Integer xianJiaTotalScore = redisService.getHashValue(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId) == null ?
-                        0 : Integer.valueOf(redisService.getHashValue(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId));
+                Integer xianJiaTotalScore = totalScoreMap.get(xianJiaUserId) == null ? 0 : totalScoreMap.get(xianJiaUserId);
                 //庄家大于闲家
                 if (zhuangJiaPaiXing.getPaixing() > xianJiaPaiXing.getPaixing()) {
                     score = score * zhuangJiaPaiXing.getMultiple();
                     zhuangJiaScore += score;
-                    redisService.put(RedisConstant.SCORE + roomId ,xianJiaUserId ,String.valueOf(-score));
-                    redisService.put(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId ,String.valueOf(xianJiaTotalScore - score));
+
                     scoreMap.put(xianJiaUserId ,-score);
+                    totalScoreMap.put(xianJiaUserId ,xianJiaTotalScore - score);
                     //庄家小于闲家
                 }else if (zhuangJiaPaiXing.getPaixing() < xianJiaPaiXing.getPaixing()) {
                     score = score * xianJiaPaiXing.getMultiple();
                     zhuangJiaScore -= score;
-                    redisService.put(RedisConstant.SCORE + roomId ,xianJiaUserId ,String.valueOf(-score));
-                    redisService.put(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId ,String.valueOf(xianJiaTotalScore + score));
+
                     scoreMap.put(xianJiaUserId ,score);
+                    totalScoreMap.put(xianJiaUserId ,xianJiaTotalScore + score);
                 }else{
                     boolean zhuangJiaDa = true;
                     //炸弹牛，比炸弹大小(已经设置不可能出现两个五小牛)
-                    if (Objects.equals(zhuangJiaPaiXing , NiuNiuPaiXingEnum.NIU_15.getPaiXingCode())){
+                    if (Objects.equals(zhuangJiaPaiXing.getMultiple() , NiuNiuPaiXingEnum.NIU_15.getPaiXingCode())){
                         if (!PokeUtil.niu_15_daXiao(zhuangJiaPokes, xianJiaPokes)) {
                             zhuangJiaDa = false;
                         }
@@ -154,26 +158,23 @@ public class FaPai1Event extends BaseEvent implements Event {
                     if (zhuangJiaDa) {
                         score = score * zhuangJiaPaiXing.getMultiple();
                         zhuangJiaScore += score;
-                        redisService.put(RedisConstant.SCORE + roomId ,xianJiaUserId ,String.valueOf(-score));
+
                         scoreMap.put(xianJiaUserId ,-score);
-                        redisService.put(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId ,String.valueOf(xianJiaTotalScore - score));
+                        totalScoreMap.put(xianJiaUserId ,xianJiaTotalScore - score);
                     }else {
                         score = score * xianJiaPaiXing.getMultiple();
                         zhuangJiaScore -= score;
-                        redisService.put(RedisConstant.SCORE + roomId ,xianJiaUserId ,String.valueOf(score));
-                        redisService.put(RedisConstant.TOTAL_SCORE + roomId ,xianJiaUserId ,String.valueOf(xianJiaTotalScore + score));
+
                         scoreMap.put(xianJiaUserId ,score);
+                        totalScoreMap.put(xianJiaUserId ,xianJiaTotalScore + score);
                     }
                 }
 
             }
         }
         //设置庄家的分数
-        Map<String, String> totalScoreMap = redisService.getMap(RedisConstant.TOTAL_SCORE + roomId);
-        Integer zhuangJiaTotalScore = totalScoreMap.get(zhuangJiaUserId) == null ? 0 : Integer.valueOf(totalScoreMap.get(zhuangJiaUserId));
-        redisService.put(RedisConstant.PAI_XING + roomId ,zhuangJiaUserId ,JsonUtil.toJsonString(zhuangJiaPaiXing));
-        redisService.put(RedisConstant.SCORE + roomId ,zhuangJiaUserId ,String.valueOf(zhuangJiaScore));
+        Integer zhuangJiaTotalScore = totalScoreMap.get(zhuangJiaUserId) == null ? 0 : totalScoreMap.get(zhuangJiaUserId);
         scoreMap.put(zhuangJiaUserId ,zhuangJiaScore);
-        redisService.put(RedisConstant.TOTAL_SCORE + roomId ,zhuangJiaUserId ,String.valueOf(zhuangJiaTotalScore + zhuangJiaScore));
+        totalScoreMap.put(zhuangJiaUserId ,zhuangJiaTotalScore + zhuangJiaScore);
     }
 }

@@ -42,7 +42,9 @@ public class XiaZhuEvent extends BaseEvent implements Event {
         data.getXiaZhuMap().putIfAbsent(runingNum ,new HashMap<>());
         data.getXiaZhuMap().get(runingNum).put(playerId ,task.getXiaZhuBeiShu());
         //广播下注的消息
-        socketService.broadcast(roomId ,new SocketResult(1011 ,playerId ,task.getXiaZhuBeiShu() ,Boolean.TRUE) ,players);
+        socketService.broadcast(roomId ,
+                new SocketResult(1011 ,playerId ,task.getXiaZhuBeiShu() ,Boolean.TRUE)
+                ,players);
 
         Integer readyPlayerSize = readyPlayers.size();
         Integer xiaZhuSize =  data.getXiaZhuMap().get(runingNum).size();
