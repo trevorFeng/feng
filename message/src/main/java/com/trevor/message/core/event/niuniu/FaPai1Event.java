@@ -9,10 +9,13 @@ import com.trevor.common.enums.NiuNiuPaiXingEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
 import com.trevor.common.util.PokeUtil;
+import com.trevor.message.bo.CountDownFlag;
 import com.trevor.message.bo.NiuniuData;
 import com.trevor.message.bo.RoomData;
 import com.trevor.message.bo.Task;
+import com.trevor.message.core.event.BaseEvent;
 import com.trevor.message.core.event.Event;
+import com.trevor.message.core.schedule.CountDownImpl;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,49 +23,47 @@ import java.util.stream.Collectors;
 /**
  * 发一张牌
  */
-public class FaPai1Event implements Event {
+public class FaPai1Event extends BaseEvent implements Event {
 
 
     @Override
     public void execute(RoomData roomData , Task task) {
         NiuniuData data = (NiuniuData) roomData;
-        Map<String ,String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
-        Set<Integer> paiXingSet = data.getPaiXing();
-        Integer rule = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.RULE));
-        Integer basePoint = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.BASE_POINT));
-        Map<String ,PaiXing> paiXingMap = new HashMap<>();
+        String roomId = data.getRoomId();
+        String runingNum = data.getRuningNum();
+        Set<Integer> paiXing = data.getPaiXing();
+        Integer rule = data.getRule();
+        Integer basePoint = data.getBasePoint();
         Map<String ,Integer> scoreMap = new HashMap<>(2<<4);
-        calcScore(roomId
-                ,paiXingList
-                ,rule
-                ,basePoint
-                ,scoreMap
-                ,paiXingMap);
-
-        messageHandle.changeGameStatus(roomId ,GameStatusEnum.FA_ONE_PAI.getCode());
+        String zhuangJiaPlayerId = data.getZhuangJiaMap().get(runingNum);
+        //计算得分,将用户的牌型放入paiXingMap
+        Map<String ,PaiXing> paiXingMap = new HashMap<>();
+        calcScore(roomId ,paiXing ,rule ,basePoint ,scoreMap ,paiXingMap ,zhuangJiaPlayerId);
+        //改变状态
+        data.setGameStatus(GameStatusEnum.FA_ONE_PAI.getCode());
 
         Map<String , List<String>> userPokeMap_5 = new HashMap<>(2<<4);
-        Map<String, String> map = redisService.getMap(RedisConstant.POKES + roomId);
-        for (Map.Entry<String ,String> entry : map.entrySet()) {
-            userPokeMap_5.put(entry.getKey() , JsonUtil.parseJavaList(entry.getValue() ,String.class));
+        Map<String, List<String>> map = data.getPokesMap().get(runingNum);
+        for (Map.Entry<String ,List<String>> entry : map.entrySet()) {
+            userPokeMap_5.put(entry.getKey() ,entry.getValue());
         }
         SocketResult socketResult = new SocketResult(1008 , userPokeMap_5);
         socketResult.setScoreMap(scoreMap);
 
-        Map<String ,Integer> paiXing = new HashMap<>();
+        Map<String ,Integer> playerPaiXingMap = new HashMap<>();
         for (Map.Entry<String , PaiXing> entry : paiXingMap.entrySet()) {
-            paiXing.put(entry.getKey() ,entry.getValue().getPaixing());
+            playerPaiXingMap.put(entry.getKey() ,entry.getValue().getPaixing());
         }
-        socketResult.setPaiXing(paiXing);
+        socketResult.setPaiXing(playerPaiXingMap);
         socketResult.setGameStatus(GameStatusEnum.FA_ONE_PAI.getCode());
 
-        messageHandle.broadcast(socketResult ,roomId);
+        socketService.broadcast(roomId ,socketResult ,data.getPlayers());
         //注册摊牌倒计时事件
-        scheduleDispatch.addListener(new CountDownListener(ListenerKey.TAI_PAI + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT + ListenerKey.TIME_FIVE));
+        scheduleDispatch.addCountDown(new CountDownImpl(roomId ,5 , CountDownFlag.TAN_PAI));
     }
 
     private void calcScore(String roomId ,Set<Integer> paiXingSet ,Integer rule ,Integer basePoint
-            ,Map<String ,Integer> scoreMap ,Map<String ,PaiXing> paiXingMap){
+            ,Map<String ,Integer> scoreMap ,Map<String ,PaiXing> paiXingMap ,String zhuangJiaPlayerId){
         //庄家id
         String zhuangJiaUserId = redisService.getValue(RedisConstant.ZHUANGJIA + roomId);
         //抢庄的map

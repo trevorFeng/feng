@@ -150,17 +150,18 @@ public class NiuniuSocket extends BaseServer {
     @OnMessage
     public void onMessage(SocketMessage socketMessage){
         if (Objects.equals(socketMessage.getMessageCode() ,1)) {
-            playService.dealReadyMessage(roomId ,this);
+            niuniuService.dealReadyMessage(roomId ,this);
         }else if (Objects.equals(socketMessage.getMessageCode() ,2)) {
-            playService.dealQiangZhuangMessage(roomId ,this ,socketMessage);
+            niuniuService.dealQiangZhuangMessage(roomId ,this ,socketMessage);
         }else if (Objects.equals(socketMessage.getMessageCode() ,3)) {
-            playService.dealXiaZhuMessage(roomId ,this ,socketMessage);
+            niuniuService.dealXiaZhuMessage(roomId ,this ,socketMessage);
         }else if (Objects.equals(socketMessage.getMessageCode() ,4)) {
-            playService.dealTanPaiMessage(roomId ,this);
-        }else if (Objects.equals(socketMessage.getMessageCode() ,5)) {
-            playService.dealShuoHuaMessage(roomId ,this ,socketMessage);
-        }else if (Objects.equals(socketMessage.getMessageCode() ,6)) {
-            playService.dealChangeToGuanZhan(roomId ,this);
+            niuniuService.dealTanPaiMessage(roomId, this);
+//        }else if (Objects.equals(socketMessage.getMessageCode() ,5)) {
+//            playService.dealShuoHuaMessage(roomId ,this ,socketMessage);
+//        }else if (Objects.equals(socketMessage.getMessageCode() ,6)) {
+//            playService.dealChangeToGuanZhan(roomId ,this);
+//        }
         }
     }
 

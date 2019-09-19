@@ -1,7 +1,6 @@
 package com.trevor.message.core.schedule;
 
 import com.trevor.message.bo.Task;
-import com.trevor.message.bo.TaskFlag;
 import com.trevor.message.core.TaskQueue;
 import lombok.Data;
 
@@ -16,13 +15,19 @@ public class CountDownImpl implements CountDownListener{
     private String roomId;
 
     /**
+     * 哪个阶段的倒计时
+     */
+    private String countDownFlag;
+
+    /**
      * 默认为5
      */
     private Integer time = 5;
 
-    public CountDownImpl(String roomId, Integer time) {
+    public CountDownImpl(String roomId, Integer time ,String countDownFlag) {
         this.roomId = roomId;
         this.time = time;
+        this.countDownFlag = countDownFlag;
     }
 
     @Override

@@ -210,13 +210,13 @@ public class SocketResult {
         this.userPokeMap_5 = userPokeMap_5;
     }
 
-    public  SocketResult(Integer head ,String userId ,Integer qiangZhuangBeiShu){
+    public SocketResult(Integer head ,String userId ,Integer qiangZhuangBeiShu){
         this.head = head;
         this.userId = userId;
         this.qiangZhuangBeiShu = qiangZhuangBeiShu;
     }
 
-    public  SocketResult(Integer head ,String userId ,Integer xiaZhuBeiShu ,Boolean isXiaZhu){
+    public SocketResult(Integer head ,String userId ,Integer xiaZhuBeiShu ,Boolean isXiaZhu){
         this.head = head;
         this.userId = userId;
         this.xiaZhuBeiShu = xiaZhuBeiShu;

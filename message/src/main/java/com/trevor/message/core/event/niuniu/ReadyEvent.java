@@ -6,6 +6,7 @@ import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
+import com.trevor.message.bo.CountDownFlag;
 import com.trevor.message.bo.NiuniuData;
 import com.trevor.message.bo.RoomData;
 import com.trevor.message.bo.Task;
@@ -72,10 +73,11 @@ public class ReadyEvent extends BaseEvent implements Event {
 
             if (readyPlayerSize == 2 && realPlayerSize > 2) {
                 //注册准备倒计时监听器
-                scheduleDispatch.addCountDown(new CountDownImpl(roomId ,5));
+                scheduleDispatch.addCountDown(new CountDownImpl(roomId ,5 , CountDownFlag.NIUNIU_READY));
             } else if (Objects.equals(readyPlayerSize, realPlayerSize) && readyPlayerSize >= 2) {
+                //移除监听器
                 scheduleDispatch.removeCountDown(roomId);
-                Task fapai4Task = Task.getNiuniuFaPai4Task(roomId);
+                Task fapai4Task = Task.getNiuniuFaPai4(roomId);
                 taskQueue.addTask(roomId ,fapai4Task);
                 return;
             }

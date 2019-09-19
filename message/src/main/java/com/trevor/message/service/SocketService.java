@@ -73,16 +73,16 @@ public class SocketService {
      */
     public void broadcast(String roomId , SocketResult res ,Set<String> playerIds){
         for (String playId : playerIds) {
-            sendMessage(playId ,res ,roomId);
+            sendToUserMessage(playId ,res ,roomId);
         }
     }
 
     /**
-     * 房间广播
+     * 给玩家发消息
      * @param playId
      * @param res
      */
-    public void sendMessage(String playId ,SocketResult res ,String roomId ){
+    public void sendToUserMessage(String playId ,SocketResult res ,String roomId ){
         NiuniuSocket socket = sockets.get(playId);
         if (socket != null && socket.session != null && socket.session.isOpen()) {
             socket.sendMessage(res);

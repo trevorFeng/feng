@@ -26,7 +26,7 @@ public class ScheduleDispatch {
     }
 
     /**
-     * 移除事件
+     * 移除事件,key为房间id
      * @param key
      */
     public void removeCountDown(String key){

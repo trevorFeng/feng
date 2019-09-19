@@ -17,12 +17,12 @@ public class NiuniuData extends RoomData{
     /**
      * 基本分数
      */
-    private String basePoint;
+    private Integer basePoint;
 
     /**
      * 规则
      */
-    private String rule;
+    private Integer rule;
 
     /**
      * 下注类型
@@ -96,9 +96,24 @@ public class NiuniuData extends RoomData{
     private Map<String ,Map<String ,Integer>> qiangZhuangMap;
 
     /**
+     * key为runingNum，value为庄家id
+     */
+    private Map<String ,String> zhuangJiaMap;
+
+    /**
      * 外层key为runingNum,内层key为玩家id，内层value为下注的倍数
      */
     private Map<String ,Map<String ,Integer>> xiaZhuMap;
+
+    /**
+     * 外层key为runingNum,内层key为玩家id，内层value为牌型
+     */
+    private Map<String ,Map<String ,Integer>> paiXingMap;
+
+    /**
+     * key为runingNum,value为摊牌玩家id
+     */
+    private Map<String ,Set<String>> tanPaiMap;
 
     /**
      * 玩家总分

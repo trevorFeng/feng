@@ -1,37 +1,38 @@
 package com.trevor.message.core.event.niuniu;
 
 import com.google.common.collect.Lists;
-import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
-import com.trevor.common.util.NumberUtil;
 import com.trevor.common.util.RandomUtils;
-import com.trevor.message.core.ListenerKey;
+import com.trevor.message.bo.CountDownFlag;
+import com.trevor.message.bo.NiuniuData;
+import com.trevor.message.bo.RoomData;
+import com.trevor.message.bo.Task;
+import com.trevor.message.core.event.BaseEvent;
 import com.trevor.message.core.event.Event;
-import com.trevor.message.core.listener.niuniu.CountDownListener;
+import com.trevor.message.core.schedule.CountDownImpl;
 
 import java.util.*;
 
 /**
  * 发送庄家事件
  */
-public class
-SelectZhuangJiaEvent extends Event {
+public class SelectZhuangJiaEvent extends BaseEvent implements Event {
 
-    public SelectZhuangJiaEvent(String roomId ,String runingNum) {
-        super.roomId = roomId;
-        super.runingNum = runingNum;
-    }
 
     @Override
-    protected void executeEvent() {
-        Map<String, String> qiangZhuangMap = redisService.getMap(RedisConstant.getQiangZhuang(roomId ,runingNum));
+    public void execute(RoomData roomData , Task task) {
+        NiuniuData data = (NiuniuData) roomData;
+        String rungingNum = data.getRuningNum();
+        String roomId = data.getRoomId();
+        Set<String> players = data.getPlayers();
+        Map<String, Integer> qiangZhuangMap = data.getQiangZhuangMap().get(rungingNum);
 
         String zhuangJiaUserId;
         List<String> qiangZhuangZhuanQuanList = Lists.newArrayList();
         //没人抢庄
         if (qiangZhuangMap.isEmpty()) {
-            zhuangJiaUserId = noPeopleQiangZhuang();
+            zhuangJiaUserId = noPeopleQiangZhuang(data.getReadyPlayMap().get(rungingNum));
         }else {
             //一个人抢庄
             if (qiangZhuangMap.size() == 1) {
@@ -39,15 +40,15 @@ SelectZhuangJiaEvent extends Event {
             //多人抢庄
             }else {
                 List<Integer> beiShus = Lists.newArrayList();
-                for (String beiShuStr : qiangZhuangMap.values()) {
-                    beiShus.add(NumberUtil.stringFormatInteger(beiShuStr));
+                for (Integer beiShu : qiangZhuangMap.values()) {
+                    beiShus.add(beiShu);
                 }
                 //升序排列
                 Collections.reverse(beiShus);
                 List<String> maxBeiShuPlayerIds = Lists.newArrayList();
                 Integer maxBeiShu = beiShus.get(0);
-                for (Map.Entry<String ,String> entry : qiangZhuangMap.entrySet()) {
-                    if (Objects.equals(NumberUtil.stringFormatInteger(entry.getValue()) ,maxBeiShu)) {
+                for (Map.Entry<String ,Integer> entry : qiangZhuangMap.entrySet()) {
+                    if (Objects.equals(entry.getValue() ,maxBeiShu)) {
                         maxBeiShuPlayerIds.add(entry.getKey());
                     }
                 }
@@ -62,32 +63,34 @@ SelectZhuangJiaEvent extends Event {
             }
         }
         //设置庄家
-        redisService.setValue(RedisConstant.getZhuangJia(roomId ,runingNum) ,zhuangJiaUserId);
+        data.getZhuangJiaMap().put(rungingNum ,zhuangJiaUserId);
         //改变状态
-        redisService.put(RedisConstant.BASE_ROOM_INFO + roomId ,RedisConstant.GAME_STATUS , GameStatusEnum.QIANG_ZHUANG_ZHUAN_QUAN.getCode());
+        data.setGameStatus(GameStatusEnum.QIANG_ZHUANG_ZHUAN_QUAN.getCode());
+
+
         SocketResult socketResult = new SocketResult(1006 ,zhuangJiaUserId);
         Boolean noZhuanQuan = qiangZhuangZhuanQuanList.isEmpty();
         if (!noZhuanQuan) {
             socketResult.setZhuanQuanPlayers(qiangZhuangZhuanQuanList);
         }
         socketResult.setGameStatus(GameStatusEnum.QIANG_ZHUANG_ZHUAN_QUAN.getCode());
-        messageHandle.broadcast(socketResult ,roomId);
+        socketService.broadcast(roomId ,socketResult ,players);
         //注册转圈倒计时
         if (!noZhuanQuan) {
-            scheduleDispatch.addListener(new CountDownListener(ListenerKey.ZHUAN_QUAN + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT + ListenerKey.TIME_TWO));
+            scheduleDispatch.addCountDown(new CountDownImpl(roomId ,2 , CountDownFlag.ZHUAN_QUAN));
         }else {
-            scheduleDispatch.addListener(new CountDownListener(ListenerKey.XIA_ZHU + ListenerKey.SPLIT + roomId + ListenerKey.SPLIT + ListenerKey.TIME_FIVE));
+            //注册下注倒计时
+            scheduleDispatch.addCountDown(new CountDownImpl(roomId ,5 , CountDownFlag.XIA_ZHU));
         }
     }
 
     /**
      * 没人抢庄
      */
-    private String noPeopleQiangZhuang(){
-        Integer randNum = RandomUtils.getRandNumMax(redisService.getSetSize(RedisConstant.READY_PLAYER + roomId));
+    private String noPeopleQiangZhuang(Set<String> readyPlayers){
+        Integer randNum = RandomUtils.getRandNumMax(readyPlayers.size());
         List<String> playerIds = Lists.newArrayList();
-        Set<String> members = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
-        for (String s : members) {
+        for (String s : readyPlayers) {
             playerIds.add(s);
         }
         return playerIds.get(randNum);
@@ -99,7 +102,7 @@ SelectZhuangJiaEvent extends Event {
      * @param qiangZhuangMap
      * @return
      */
-    private String onePeopleQiangZhuang(Map<String, String> qiangZhuangMap){
+    private String onePeopleQiangZhuang(Map<String, Integer> qiangZhuangMap){
         Iterator<String> iterator = qiangZhuangMap.keySet().iterator();
         while (iterator.hasNext()) {
             return iterator.next();

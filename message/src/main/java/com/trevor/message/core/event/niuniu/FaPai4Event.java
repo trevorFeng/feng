@@ -3,81 +3,77 @@ package com.trevor.message.core.event.niuniu;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.trevor.common.bo.PaiXing;
-import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
-import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.PokeUtil;
 import com.trevor.common.util.RandomUtils;
+import com.trevor.message.bo.CountDownFlag;
 import com.trevor.message.bo.NiuniuData;
 import com.trevor.message.bo.RoomData;
 import com.trevor.message.bo.Task;
-import com.trevor.message.core.ListenerKey;
+import com.trevor.message.core.event.BaseEvent;
 import com.trevor.message.core.event.Event;
-import com.trevor.message.core.listener.niuniu.CountDownListener;
+import com.trevor.message.core.schedule.CountDownImpl;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class FaPai4Event implements Event {
+public class FaPai4Event extends BaseEvent implements Event {
 
     @Override
     public void execute(RoomData roomData , Task task) {
         NiuniuData data = (NiuniuData) roomData;
         String runingNum = data.getRuningNum();
-        Map<String, List<String>> pokesMap = data.getPokesMap().get(runingNum);
-        //已经发牌
-        if (pokesMap != null && !pokesMap.isEmpty()) {
+        String roomId = data.getRoomId();
+        Map<String, List<String>> userAlreadyPokesMap = data.getPokesMap().get(runingNum);
+        //判断下这个任务是否已经执行过
+        if (userAlreadyPokesMap != null && !userAlreadyPokesMap.isEmpty()) {
             return;
         }
         //生成牌
-        List<List<String>> pokesList = getPokesList();
+        Set<String> readyPlayerUserIds = data.getReadyPlayMap().get(runingNum);
+        Set<Integer> paiXing = data.getPaiXing();
+        List<List<String>> pokesList = getPokesList(paiXing ,readyPlayerUserIds.size());
         //设置每个人的牌
-        Map<String, String> pokesMap = Maps.newHashMap();
-        setPlayersPoke(pokesList ,pokesMap);
+        data.getPokesMap().put(runingNum ,setPlayersPoke(pokesList ,readyPlayerUserIds));
         //改变房间状态
-        redisService.setValue(RedisConstant.getGameStatus(roomId ,runingNum) ,GameStatusEnum.FA_FOUR_PAI.getCode());
+        data.setGameStatus(GameStatusEnum.FA_FOUR_PAI.getCode());
         //发牌并发送房间状态
-        faPai(pokesMap);
-        //注册抢庄倒计时
-        scheduleDispatch.addListener(new CountDownListener(ListenerKey.getQiangZhaungKey(roomId ,runingNum ,5)));
+        Set<String> players = data.getPlayers();
+        faPai( data.getPokesMap().get(runingNum) ,readyPlayerUserIds ,players ,roomId);
+        //抢庄倒计时添加到任务队列
+        scheduleDispatch.addCountDown(new CountDownImpl(data.getRoomId() ,5 , CountDownFlag.NIUNIU_QIANG_ZHUANG));
     }
 
-    private void faPai(Map<String, String> pokesMap){
-        Set<String> roomPlayer = redisService.getSetMembers(RedisConstant.getRoomPlayer(roomId));
-        Set<String> readyPlayerUserIds = redisService.getSetMembers(RedisConstant.getReadyPlayer(roomId ,runingNum));
+    private void faPai(Map<String, List<String>> pokesMap ,Set<String> readyPlayerUserIds , Set<String> players ,String roomId){
         //给每个人发牌
-        for (String playerId : roomPlayer) {
+        for (String playerId : players) {
             if (readyPlayerUserIds.contains(playerId)) {
-                List<String> userPokeList_4 = JsonUtil.parseJavaList(pokesMap.get(playerId), String.class).subList(0, 4);
+                List<String> userPokeList_4 = pokesMap.get(playerId).subList(0, 4);
                 SocketResult soc = new SocketResult(1004, userPokeList_4);
                 soc.setGameStatus(GameStatusEnum.FA_FOUR_PAI.getCode());
-                messageHandle.sendMessage(soc, playerId);
+                socketService.sendMessage(playerId ,soc ,roomId);
             } else {
                 SocketResult soc = new SocketResult(1004);
                 soc.setGameStatus(GameStatusEnum.FA_FOUR_PAI.getCode());
-                messageHandle.sendMessage(soc, playerId);
+                socketService.sendMessage(playerId ,soc ,roomId);
             }
         }
     }
 
-    private void setPlayersPoke(List<List<String>> pokesList ,Map<String, String> map) {
-        Set<String> readyPlayerUserIds = redisService.getSetMembers(RedisConstant.getReadyPlayer(roomId ,runingNum));
+    private Map<String, List<String>> setPlayersPoke(List<List<String>> pokesList ,Set<String> readyPlayerUserIds) {
         int num = 0;
-        Map<String, String> pokeMap = Maps.newHashMap();
+        Map<String, List<String>> pokeMap = Maps.newHashMap();
         for (String playerId : readyPlayerUserIds) {
             List<String> pokes = pokesList.get(num);
-            pokeMap.put(playerId, JsonUtil.toJsonString(pokes));
+            pokeMap.put(playerId, pokes);
             num++;
         }
-        map = pokeMap;
-        redisService.putAll(RedisConstant.getPokes(roomId ,runingNum), pokeMap);
+        return pokeMap;
     }
 
-    private List<List<String>> getPokesList() {
-        List<Integer> paiXing = JsonUtil.parseJavaList(
-                redisService.getHashValue(RedisConstant.getBaseRoomInfo(roomId), RedisConstant.PAIXING), Integer.class);
+    private List<List<String>> getPokesList(Set<Integer> paiXing ,Integer readyPlayerUserSize) {
         List<String> rootPokes = PokeUtil.generatePoke5();
         //生成牌在rootPokes的索引
         List<List<Integer>> lists;
@@ -86,8 +82,7 @@ public class FaPai4Event implements Event {
         //判断每个集合是否有两个五小牛，有的话重新生成
         Boolean twoWuXiaoNiu = true;
         while (twoWuXiaoNiu) {
-            lists = RandomUtils.getSplitListByMax(rootPokes.size(),
-                    redisService.getSetSize(RedisConstant.getReadyPlayer(roomId ,runingNum)) * 5);
+            lists = RandomUtils.getSplitListByMax(rootPokes.size(), readyPlayerUserSize * 5);
             //生成牌
             pokesList = Lists.newArrayList();
             for (List<Integer> integers : lists) {

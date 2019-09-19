@@ -59,6 +59,15 @@ public class Task {
 
     private User joinUser;
 
+    /**
+     * 牛牛加入房间的任务
+     * @param roomId
+     * @param isFriendManage
+     * @param roomAuthFriendAllow
+     * @param socket
+     * @param joinUser
+     * @return
+     */
     public static Task getNiuniuJoinRoom(String roomId , Boolean isFriendManage , Boolean roomAuthFriendAllow , NiuniuSocket socket ,User joinUser){
         Task task = new Task();
         task.roomId = roomId;
@@ -71,28 +80,72 @@ public class Task {
         return task;
     }
 
+    /**
+     * 牛牛准备的任务
+     * @param roomId
+     * @return
+     */
+    public static Task getNiuniuReady(String roomId ,String userId){
+        Task task = new Task();
+        task.flag = TaskFlag.READY;
+        task.roomId = roomId;
+        task.playId = userId;
+        return task;
+    }
+
     public static Task getNiuniuCountDown(Integer time ,String roomId){
         Task task = new Task();
-        task.setRoomId(roomId);
-        task.setCountDown(time);
-        task.setFlag(TaskFlag.COUNT_DOWN);
+        task.roomId = roomId;
+        task.countDown = time;
+        task.flag = TaskFlag.COUNT_DOWN;
         return task;
     }
 
-    public Task getNiuniuReadyTask(){
 
-        return null;
-    }
-
-    public static Task getNiuniuFaPai4Task(String roomId){
+    public static Task getNiuniuFaPai4(String roomId){
         Task task = new Task();
         task.roomId = roomId;
+        task.flag = TaskFlag.FA_PAI_4;
         return task;
     }
 
-    public static Task getNiuniuFaPai1Task(String roomId){
+    public static Task getNiuniuFaPai1(String roomId){
         Task task = new Task();
         task.roomId = roomId;
+        task.flag = TaskFlag.FA_PAI_1;
+        return task;
+    }
+
+    public static Task getNiuniuQiangZhuang(String roomId ,String userId ,Integer qiangZhuangBeiShu){
+        Task task = new Task();
+        task.roomId = roomId;
+        task.playId = userId;
+        task.flag = TaskFlag.QIANG_ZHAUNG;
+        task.qiangZhuangBeiShu = qiangZhuangBeiShu;
+        return task;
+    }
+
+    public static Task getNiuniuSelectZhuangJia(String roomId){
+        Task task = new Task();
+        task.roomId = roomId;
+        task.flag = TaskFlag.SELECT_ZHUANG_JIA;
+        return task;
+    }
+
+    public static Task getNiuniuXiaZhu(String roomId ,String userId ,Integer xiaZhuBeiShu){
+        Task task = new Task();
+        task.roomId = roomId;
+        task.playId = userId;
+        task.flag = TaskFlag.XIA_ZHU;
+        task.xiaZhuBeiShu = xiaZhuBeiShu;
+        return task;
+    }
+
+    public static Task getNiuniuTanPai(String roomId ,String userId){
+        Task task = new Task();
+        task.roomId = roomId;
+        task.playId = userId;
+        task.flag = TaskFlag.TAN_PAI;
         return task;
     }
 }
