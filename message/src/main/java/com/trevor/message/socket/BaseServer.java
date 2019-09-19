@@ -1,6 +1,5 @@
 package com.trevor.message.socket;
 
-import com.trevor.common.dao.mysql.FriendManageMapper;
 import com.trevor.common.service.RedisService;
 import com.trevor.message.core.GameCore;
 import com.trevor.message.core.TaskQueue;
@@ -8,8 +7,6 @@ import com.trevor.message.feign.FriendManageFeignResult;
 import com.trevor.message.feign.RoomFeignResult;
 import com.trevor.message.feign.UserFeignResult;
 import com.trevor.message.service.NiuniuService;
-import com.trevor.message.service.PlayService;
-import com.trevor.message.service.RoomSocketService;
 import com.trevor.message.service.SocketService;
 import org.springframework.stereotype.Component;
 
@@ -62,6 +59,11 @@ public class BaseServer {
     @Resource
     public void setRoomFeignResult(RoomFeignResult roomFeignResult){
         BaseServer.roomFeignResult = roomFeignResult;
+    }
+
+    @Resource
+    public void setNiuniuService(NiuniuService niuniuService){
+        BaseServer.niuniuService = niuniuService;
     }
 
 }

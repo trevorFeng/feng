@@ -8,19 +8,19 @@ import com.trevor.common.domain.mysql.User;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
+import com.trevor.message.bo.RoomData;
+import com.trevor.message.bo.Task;
+import com.trevor.message.core.event.BaseEvent;
 import com.trevor.message.core.event.Event;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class StopOrContinueEvent extends Event {
+public class StopOrContinueEvent extends BaseEvent implements Event {
 
-    public StopOrContinueEvent(String roomId) {
-        super.roomId = roomId;
-    }
 
     @Override
-    protected void executeEvent() {
+    public void execute(RoomData roomData , Task task) {
 
         Map<String, String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
         //保存结果
@@ -99,16 +99,4 @@ public class StopOrContinueEvent extends Event {
         return playerResults;
     }
 
-    private void deleteKeys() {
-        List<String> keys = new ArrayList<>();
-        keys.add(RedisConstant.POKES + roomId);
-        keys.add(RedisConstant.READY_PLAYER + roomId);
-        keys.add(RedisConstant.QIANGZHAUNG + roomId);
-        keys.add(RedisConstant.ZHUANGJIA + roomId);
-        keys.add(RedisConstant.TANPAI + roomId);
-        keys.add(RedisConstant.XIANJIA_XIAZHU + roomId);
-        keys.add(RedisConstant.SCORE + roomId);
-        keys.add(RedisConstant.PAI_XING + roomId);
-        redisService.deletes(keys);
-    }
 }

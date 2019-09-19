@@ -53,11 +53,11 @@ public class FaPai4Event extends BaseEvent implements Event {
                 List<String> userPokeList_4 = pokesMap.get(playerId).subList(0, 4);
                 SocketResult soc = new SocketResult(1004, userPokeList_4);
                 soc.setGameStatus(GameStatusEnum.FA_FOUR_PAI.getCode());
-                socketService.sendMessage(playerId ,soc ,roomId);
+                socketService.sendToUserMessage(playerId ,soc ,roomId);
             } else {
                 SocketResult soc = new SocketResult(1004);
                 soc.setGameStatus(GameStatusEnum.FA_FOUR_PAI.getCode());
-                socketService.sendMessage(playerId ,soc ,roomId);
+                socketService.sendToUserMessage(playerId ,soc ,roomId);
             }
         }
     }

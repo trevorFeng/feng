@@ -4,8 +4,13 @@ import com.google.common.collect.Maps;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
+import com.trevor.message.bo.NiuniuData;
+import com.trevor.message.bo.RoomData;
+import com.trevor.message.bo.Task;
+import com.trevor.message.core.event.BaseEvent;
 import com.trevor.message.core.event.Event;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -13,31 +18,32 @@ import java.util.Set;
 /**
  * 默认下注事件
  */
-public class DefaultXiaZhuEvent extends Event {
+public class DefaultXiaZhuEvent extends BaseEvent implements Event {
 
-    public DefaultXiaZhuEvent(String roomId) {
-        super.roomId = roomId;
-    }
 
     @Override
-    protected void executeEvent() {
+    public void execute(RoomData roomData , Task task) {
+        NiuniuData data = (NiuniuData) roomData;
+        String rungingNum = data.getRuningNum();
+        String roomId = data.getRoomId();
+        Set<String> players = data.getPlayers();
+        Set<String> readyPlayers = data.getReadyPlayMap().get(rungingNum);
+        Collection<Integer> xiaZhuPlayers = data.getXiaZhuMap().get(rungingNum).values();
+        String zhuangJiaPlayerId = data.getZhuangJiaMap().get(rungingNum);
         Map<String ,String> map = Maps.newHashMap();
-        Set<String> readyPlayers = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
-        Set<String> xiaZhuPlayers = redisService.getMapKeys(RedisConstant.XIANJIA_XIAZHU + roomId);
-        String zhuangJiaPlayerId = redisService.getValue(RedisConstant.ZHUANGJIA + roomId);
         for (String s : readyPlayers) {
             if (!Objects.equals(s ,zhuangJiaPlayerId) && !xiaZhuPlayers.contains(s)) {
                 map.put(s ,"1");
             }
         }
         if (!map.isEmpty()) {
-            messageHandle.changeGameStatus(roomId , GameStatusEnum.DEFAULT_XIA_ZHU.getCode());
+            data.setGameStatus(GameStatusEnum.DEFAULT_XIA_ZHU.getCode());
             SocketResult soc = new SocketResult();
             soc.setHead(1020);
             soc.setXianJiaXiaZhuMap(map);
             soc.setGameStatus(GameStatusEnum.DEFAULT_XIA_ZHU.getCode());
-            messageHandle.broadcast(soc ,roomId);
-            actuator.addEvent(new FaPai1Event(roomId));
+            socketService.broadcast(roomId ,soc ,players);
+            taskQueue.addTask(roomId ,Task.getNiuniuFaPai1(roomId));
         }
     }
 }
