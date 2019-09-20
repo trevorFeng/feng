@@ -1,6 +1,6 @@
 package com.trevor.data.service;
 
-import com.trevor.common.dao.mysql.PersonalCardMapper;
+import com.trevor.data.dao.mysql.PersonalCardMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

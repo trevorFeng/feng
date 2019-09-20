@@ -1,4 +1,4 @@
-package com.trevor.common.config;
+package com.trevor.message.socket;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

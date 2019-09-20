@@ -1,7 +1,7 @@
 package com.trevor.data.dao.mysql;
 
 
-import com.trevor.data.domain.mysql.CardConsumRecord;
+import com.trevor.common.domain.mysql.CardConsumRecord;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 

@@ -1,7 +1,7 @@
 package com.trevor.data.service;
 
-import com.trevor.common.dao.mongo.PlayerResultMapper;
 import com.trevor.common.domain.mongo.PlayerResult;
+import com.trevor.data.dao.mongo.PlayerResultMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

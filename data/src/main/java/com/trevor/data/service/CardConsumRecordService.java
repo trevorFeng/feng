@@ -1,11 +1,12 @@
 package com.trevor.data.service;
 
 
-import com.trevor.common.dao.mysql.CardConsumRecordMapper;
 import com.trevor.common.domain.mysql.CardConsumRecord;
+import com.trevor.data.dao.mysql.CardConsumRecordMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -15,6 +16,7 @@ import java.util.List;
 @Service
 public class CardConsumRecordService {
 
+    @Resource
     private CardConsumRecordMapper cardConsumRecordMapper;
 
     @Transactional(rollbackFor = Exception.class)

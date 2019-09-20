@@ -18,9 +18,6 @@ public class RedisService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
-    public Boolean hasKey(String redisKey){
-        return stringRedisTemplate.hasKey(redisKey);
-    }
 
     /**
      * 删除键值对
@@ -31,98 +28,12 @@ public class RedisService {
     }
 
     /**
-     * 批量删除键值对
-     * @param keys
-     */
-    public void deletes(List<String> keys){
-        stringRedisTemplate.delete(keys);
-    }
-
-    /**
-     * 得到value
-     * @param key
-     * @return
-     */
-    public String getValue(String key){
-        return stringRedisTemplate.boundValueOps(key).get();
-    }
-
-    /**
      * 得到value
      * @param keys
      * @return
      */
     public List<String> getBatchValue(Set<String> keys){
         return stringRedisTemplate.opsForValue().multiGet(keys);
-    }
-
-    /**
-     * set VALUE
-     * @param key
-     * @param value
-     */
-    public void setValue(String key ,String value){
-        stringRedisTemplate.boundValueOps(key).set(value);
-    }
-
-    /**
-     * set VALUE
-     * @param key
-     * @param value
-     */
-    public void setValueWithExpire(String key , String value , Long l , TimeUnit timeUnit){
-        stringRedisTemplate.boundValueOps(key).set(value ,l ,timeUnit);
-    }
-
-    /**
-     * 得到set全部元素
-     * @param key
-     * @return
-     */
-    public Set<String> getSetMembers(String key) {
-        BoundSetOperations<String, String> bo = stringRedisTemplate.boundSetOps(key);
-
-        return bo.members();
-    }
-
-    /**
-     * 是否是set成员
-     * @param key
-     * @param value
-     * @return
-     */
-    public Boolean jugeSetMember(String key ,String value){
-        return stringRedisTemplate.boundSetOps(key).isMember(value);
-    }
-
-    /**
-     *  添加set元素
-     * @param key
-     * @param value
-     */
-    public void setAdd(String key ,String ... value){
-        BoundSetOperations<String, String> bo = stringRedisTemplate.boundSetOps(key);
-        bo.add(value);
-    }
-
-    /**
-     * 删除set中元素
-     * @param key
-     * @param value
-     */
-    public void setDeleteMember(String key ,String...value){
-        BoundSetOperations<String, String> bo = stringRedisTemplate.boundSetOps(key);
-        bo.remove(value);
-    }
-
-    /**
-     * 得到set大小
-     * @param key
-     * @return
-     */
-    public Integer getSetSize(String key){
-        BoundSetOperations<String, String> bo = stringRedisTemplate.boundSetOps(key);
-        return Math.toIntExact(bo.size());
     }
 
     /**
@@ -148,37 +59,6 @@ public class RedisService {
     }
 
     /**
-     * 得到list大小
-     * @param key
-     * @return
-     */
-    public Integer getListSize(String key){
-        return Math.toIntExact(stringRedisTemplate.boundListOps(key).size());
-    }
-
-
-    /**
-     * 得到hash的value
-     * @param redisKey
-     * @param hashKey
-     * @return
-     */
-    public String getHashValue(String redisKey ,String hashKey){
-        BoundHashOperations<String, String, String> bh = stringRedisTemplate.boundHashOps(redisKey);
-        return bh.get(hashKey);
-    }
-
-    /**
-     * 得到map
-     * @param key
-     * @return
-     */
-    public Map<String ,String> getMap(String key){
-        BoundHashOperations<String, String, String> bh = stringRedisTemplate.boundHashOps(key);
-        return bh.entries();
-    }
-
-    /**
      * 存入map
      * @param key
      * @param map
@@ -199,25 +79,6 @@ public class RedisService {
         bh.put(hashKey ,hashValue);
     }
 
-    /**
-     * map的大小
-     * @param redisKey
-     * @return
-     */
-    public Integer getMapSize(String redisKey){
-        BoundHashOperations<String, String, String> bh = stringRedisTemplate.boundHashOps(redisKey);
-        return Math.toIntExact(bh.size());
-    }
-
-    /**
-     * 得到map的key的集合
-     * @param redisKey
-     * @return
-     */
-    public Set<String> getMapKeys(String redisKey){
-        BoundHashOperations<String, String, String> bh = stringRedisTemplate.boundHashOps(redisKey);
-        return bh.keys();
-    }
 
 
 
