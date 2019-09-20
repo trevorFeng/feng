@@ -2,7 +2,7 @@ package com.trevor.message.bo;
 
 import com.trevor.common.domain.mysql.User;
 import com.trevor.message.socket.BaseServer;
-import com.trevor.message.socket.NiuniuSocket;
+import com.trevor.message.socket.impl.NiuniuSocket;
 import lombok.Data;
 
 @Data
@@ -60,6 +60,35 @@ public class Task {
     private User joinUser;
 
     /**
+     * 用户离开的任务
+     * @param roomId
+     * @param playerId
+     * @return
+     */
+    public static Task getLeave(String roomId ,String playerId){
+        Task task = new Task();
+        task.roomId = roomId;
+        task.playId = playerId;
+        task.flag = TaskFlag.LEAVE;
+        return task;
+    }
+
+    /**
+     * 断开连接的任务
+     * @param roomId
+     * @param playerId
+     * @return
+     */
+    public static Task getNiuniuDisConnection(String roomId ,String playerId){
+        Task task = new Task();
+        task.roomId = roomId;
+        task.playId = playerId;
+        task.flag = TaskFlag.DIS_CONNECTION;
+        return task;
+    }
+
+
+    /**
      * 牛牛加入房间的任务
      * @param roomId
      * @param isFriendManage
@@ -93,11 +122,18 @@ public class Task {
         return task;
     }
 
-    public static Task getNiuniuCountDown(Integer time ,String roomId){
+    /**
+     *
+     * @param time
+     * @param roomId
+     * @return
+     */
+    public static Task getNiuniuCountDown(Integer time ,String roomId ,String niuniuCountDownFg){
         Task task = new Task();
         task.roomId = roomId;
         task.countDown = time;
         task.flag = TaskFlag.COUNT_DOWN;
+        task.niuniuCountDownFg = niuniuCountDownFg;
         return task;
     }
 
@@ -106,6 +142,13 @@ public class Task {
         Task task = new Task();
         task.roomId = roomId;
         task.flag = TaskFlag.FA_PAI_4;
+        return task;
+    }
+
+    public static Task getNiuniuDefaultXiaZhu(String roomId){
+        Task task = new Task();
+        task.roomId = roomId;
+        task.flag = TaskFlag.DEFAULT_XIA_ZHU;
         return task;
     }
 
@@ -146,6 +189,13 @@ public class Task {
         task.roomId = roomId;
         task.playId = userId;
         task.flag = TaskFlag.TAN_PAI;
+        return task;
+    }
+
+    public static Task getStopOrContinue(String roomId){
+        Task task = new Task();
+        task.roomId = roomId;
+        task.flag = TaskFlag.STOP_OR_CONTINUE;
         return task;
     }
 }

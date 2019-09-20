@@ -8,6 +8,7 @@ import com.trevor.common.domain.mysql.User;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
+import com.trevor.message.bo.NiuniuData;
 import com.trevor.message.bo.RoomData;
 import com.trevor.message.bo.Task;
 import com.trevor.message.core.event.BaseEvent;
@@ -21,49 +22,56 @@ public class StopOrContinueEvent extends BaseEvent implements Event {
 
     @Override
     public void execute(RoomData roomData , Task task) {
+        NiuniuData data = (NiuniuData) roomData;
+        String roomId = data.getRoomId();
+        Set<String> players = data.getPlayers();
 
-        Map<String, String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
+        data.setGameStatus(GameStatusEnum.JIE_SUAN.getCode());
+        SocketResult soc = new SocketResult(1012);
+        soc.setGameStatus(GameStatusEnum.JIE_SUAN.getCode());
+
+        socketService.broadcast(roomId ,soc ,players);
+
         //保存结果
-        List<PlayerResult> playerResults = generatePlayerResults(roomId, baseRoomInfoMap);
-        playerResultMapper.saveAll(playerResults);
-        //删除本局的key
-        deleteKeys();
-        Integer runingNum = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.RUNING_NUM));
-        Integer totalNum = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.TOTAL_NUM));
+        List<PlayerResult> playerResults = generatePlayerResults(roomId, data);
+        playerResultFeignResult.saveAll(playerResults);
+
+        Integer runingNum = NumberUtil.stringFormatInteger(data.getRuningNum());
+        Integer totalNum = NumberUtil.stringFormatInteger(data.getTotalNum());
         Boolean isOver = Objects.equals(runingNum, totalNum);
+
         //结束
         if (isOver) {
-            roomService.updateStatus(Long.valueOf(roomId), 2, runingNum);
+            roomFeignResult.updateStatus(Long.valueOf(roomId), 2, runingNum);
             SocketResult socketResult = new SocketResult(1013);
-            List<String> keyList = new ArrayList<>();
-            keyList.add(RedisConstant.TOTAL_SCORE + roomId);
-            keyList.add(RedisConstant.BASE_ROOM_INFO + roomId);
-            keyList.add(RedisConstant.REAL_ROOM_PLAYER + roomId);
-            keyList.add(RedisConstant.ROOM_PLAYER + roomId);
-            redisService.deletes(keyList);
-            messageHandle.broadcast(socketResult, roomId);
+            socketResult.setGameStatus(GameStatusEnum.STOP.getCode());
+            socketService.broadcast(roomId ,socketResult ,data.getPlayers());
         } else {
             Integer next = runingNum + 1;
-            roomService.updateRuningNum(Long.valueOf(roomId), runingNum);
+
+            roomFeignResult.updateRuningNum(Long.valueOf(roomId), runingNum);
+
+            data.setGameStatus(GameStatusEnum.READY.getCode());
+            data.setRuningNum(next.toString());
+
             SocketResult socketResult = new SocketResult();
             socketResult.setHead(1016);
             socketResult.setRuningAndTotal(next + "/" + totalNum);
-            redisService.put(RedisConstant.BASE_ROOM_INFO + roomId, RedisConstant.GAME_STATUS, GameStatusEnum.READY.getCode());
-            redisService.put(RedisConstant.BASE_ROOM_INFO + roomId, RedisConstant.RUNING_NUM, String.valueOf(next));
-            messageHandle.broadcast(socketResult, roomId);
+            socketService.broadcast(roomId ,socketResult ,data.getPlayers());
         }
     }
 
-    private List<PlayerResult> generatePlayerResults(String roomId, Map<String, String> baseRoomInfoMap) {
+    private List<PlayerResult> generatePlayerResults(String roomId, NiuniuData data) {
         Long entryDatetime = System.currentTimeMillis();
-        Map<String, String> scoreMap = redisService.getMap(RedisConstant.SCORE + roomId);
-        Set<String> readyPlayerStr = redisService.getSetMembers(RedisConstant.READY_PLAYER + roomId);
+        String runingNum = data.getRuningNum();
+        Map<String, Integer> scoreMap = data.getRuningScoreMap().get(runingNum);
+        Set<String> readyPlayerStr = data.getReadyPlayMap().get(runingNum);
         List<Long> readyPlayerLong = readyPlayerStr.stream().map(s -> Long.valueOf(s)).collect(Collectors.toList());
-        List<User> users = userService.findUsersByIds(readyPlayerLong);
-        String zhuangJiaId = redisService.getValue(RedisConstant.ZHUANGJIA + roomId);
-        Map<String, String> totalScoreMap = redisService.getMap(RedisConstant.TOTAL_SCORE + roomId);
-        Map<String, String> pokesMap = redisService.getMap(RedisConstant.POKES + roomId);
-        Map<String, String> paiXingMap = redisService.getMap(RedisConstant.PAI_XING + roomId);
+        List<User> users = userFeignResult.findUsersByIds(readyPlayerLong);
+        String zhuangJiaId = data.getZhuangJiaMap().get(runingNum);
+        Map<String, Integer> totalScoreMap = data.getTotalScoreMap();
+        Map<String, List<String>> pokesMap = data.getPokesMap().get(runingNum);
+        Map<String, PaiXing> paiXingMap = data.getPaiXingMap().get(runingNum);
         List<PlayerResult> playerResults = new ArrayList<>();
         for (User user : users) {
             PlayerResult playerResult = new PlayerResult();
@@ -74,9 +82,9 @@ public class StopOrContinueEvent extends BaseEvent implements Event {
             //房间id
             playerResult.setRoomId(Long.valueOf(roomId));
             //第几局
-            playerResult.setGameNum(Integer.valueOf(baseRoomInfoMap.get(RedisConstant.RUNING_NUM)));
+            playerResult.setGameNum(Integer.valueOf(runingNum));
             //本局得分情况
-            playerResult.setScore(Integer.valueOf(scoreMap.get(userIdStr)));
+            playerResult.setScore(scoreMap.get(userIdStr));
             //是否是庄家
             if (Objects.equals(zhuangJiaId, userIdStr)) {
                 playerResult.setIsZhuangJia(Boolean.TRUE);
@@ -84,11 +92,11 @@ public class StopOrContinueEvent extends BaseEvent implements Event {
                 playerResult.setIsZhuangJia(Boolean.FALSE);
             }
             //设置总分
-            playerResult.setTotalScore(Integer.valueOf(totalScoreMap.get(userIdStr)));
+            playerResult.setTotalScore(totalScoreMap.get(userIdStr));
             //设置牌
-            playerResult.setPokes(JsonUtil.parseJavaList(pokesMap.get(userIdStr), String.class));
+            playerResult.setPokes(pokesMap.get(userIdStr));
             //设置牌型
-            PaiXing paiXing = JsonUtil.parseJavaObject(paiXingMap.get(userIdStr), PaiXing.class);
+            PaiXing paiXing = paiXingMap.get(userIdStr);
             playerResult.setPaiXing(paiXing.getPaixing());
             //设置倍数
             playerResult.setPaiXing(paiXing.getMultiple());

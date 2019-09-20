@@ -41,7 +41,7 @@ public class FaPai4Event extends BaseEvent implements Event {
         data.setGameStatus(GameStatusEnum.FA_FOUR_PAI.getCode());
         //发牌并发送房间状态
         Set<String> players = data.getPlayers();
-        faPai( data.getPokesMap().get(runingNum) ,readyPlayerUserIds ,players ,roomId);
+        faPai(data.getPokesMap().get(runingNum) ,readyPlayerUserIds ,players ,roomId);
         //抢庄倒计时添加到任务队列
         scheduleDispatch.addCountDown(new CountDownImpl(data.getRoomId() ,5 , CountDownFlag.NIUNIU_QIANG_ZHUANG));
     }

@@ -42,9 +42,17 @@ public class CountDownEvent extends BaseEvent implements Event {
             if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.NIUNIU_READY)) {
                 Task faPai4Task = Task.getNiuniuFaPai4(roomId);
                 taskQueue.addTask(roomId ,faPai4Task);
-            //抢庄的倒计时结束，加入发1张牌的事件
+            //抢庄的倒计时结束，加入选择庄家事件
             }else if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.NIUNIU_QIANG_ZHUANG)) {
-                Task qiangZhuangTask = Task.getNiuniuFaPai4(roomId);
+                Task qiangZhuangTask = Task.getNiuniuSelectZhuangJia(roomId);
+                taskQueue.addTask(roomId ,qiangZhuangTask);
+            //下注倒计时结束，加入默认下注事件
+            }else if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.XIA_ZHU)) {
+                Task qiangZhuangTask = Task.getNiuniuDefaultXiaZhu(roomId);
+                taskQueue.addTask(roomId ,qiangZhuangTask);
+            //摊牌倒计时结束，加入是否继续事件
+            }else if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.TAN_PAI)) {
+                Task qiangZhuangTask = Task.getStopOrContinue(roomId);
                 taskQueue.addTask(roomId ,qiangZhuangTask);
             }
         }
@@ -64,6 +72,12 @@ public class CountDownEvent extends BaseEvent implements Event {
             }else if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.NIUNIU_QIANG_ZHUANG)) {
                 data.setGameStatus(GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_START.getCode());
                 socketResult.setGameStatus(GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_START.getCode());
+            }else if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.XIA_ZHU)) {
+                data.setGameStatus(GameStatusEnum.XIA_ZHU_COUNT_DOWN_START.getCode());
+                socketResult.setGameStatus(GameStatusEnum.XIA_ZHU_COUNT_DOWN_START.getCode());
+            }else if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.TAN_PAI)) {
+                data.setGameStatus(GameStatusEnum.TAN_PAI_COUNT_DOWN_START.getCode());
+                socketResult.setGameStatus(GameStatusEnum.TAN_PAI_COUNT_DOWN_START.getCode());
             }
         }else if (time == 1) {
             if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.NIUNIU_READY)) {
@@ -72,6 +86,12 @@ public class CountDownEvent extends BaseEvent implements Event {
             }else if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.NIUNIU_QIANG_ZHUANG)) {
                 data.setGameStatus(GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_END.getCode());
                 socketResult.setGameStatus(GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_END.getCode());
+            }else if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.XIA_ZHU)) {
+                data.setGameStatus(GameStatusEnum.XIA_ZHU_COUNT_DOWN_END.getCode());
+                socketResult.setGameStatus(GameStatusEnum.XIA_ZHU_COUNT_DOWN_END.getCode());
+            }else if (Objects.equals(task.getNiuniuCountDownFg() , CountDownFlag.TAN_PAI)) {
+                data.setGameStatus(GameStatusEnum.TAN_PAI_COUNT_DOWN_END.getCode());
+                socketResult.setGameStatus(GameStatusEnum.TAN_PAI_COUNT_DOWN_END.getCode());
             }
         }
     }

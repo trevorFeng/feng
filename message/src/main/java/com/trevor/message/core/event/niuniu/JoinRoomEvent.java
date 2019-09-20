@@ -6,7 +6,6 @@ import com.trevor.common.bo.PaiXing;
 import com.trevor.common.bo.Player;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
-import com.trevor.common.domain.mysql.Room;
 import com.trevor.common.domain.mysql.User;
 import com.trevor.common.enums.GameStatusEnum;
 import com.trevor.common.enums.RoomTypeEnum;
@@ -18,12 +17,13 @@ import com.trevor.message.bo.RoomData;
 import com.trevor.message.bo.Task;
 import com.trevor.message.core.event.BaseEvent;
 import com.trevor.message.core.event.Event;
-import com.trevor.message.service.SocketService;
-import com.trevor.message.socket.NiuniuSocket;
+import com.trevor.message.socket.impl.NiuniuSocket;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class JoinRoomEvent extends BaseEvent implements Event {
 
@@ -64,7 +64,7 @@ public class JoinRoomEvent extends BaseEvent implements Event {
         //删除自己的消息队列
         redisService.delete(RedisConstant.MESSAGES_QUEUE + playerId);
         //加入广播的队列
-        socketService.join(roomId ,socket);
+        socketService.join(socket);
         data.getPlayers().add(playerId);
 
         //给新人发消息
@@ -87,7 +87,7 @@ public class JoinRoomEvent extends BaseEvent implements Event {
         Set<String> guanZhongUserIds = data.getGuanZhongs();
         soc.setPlayers(getRealRoomPlayerCount(realUserIds ,guanZhongUserIds ,totalScoreMap));
         //发送房间状态消息
-        welcome(roomId ,soc);
+        welcome(data ,task ,soc);
     }
 
     private SocketResult checkRoom(Boolean isFriendManage ,List<Integer> special ,Boolean roomAuthFriendAllow
@@ -173,8 +173,14 @@ public class JoinRoomEvent extends BaseEvent implements Event {
     /**
      * 欢迎玩家加入，发送房间状态信息
      */
-    private void welcome(String roomId ,String playerId ,SocketResult socketResult ,NiuniuSocket socket ,String gameStatus ,Set<String> readyPlayers ,Set<String> ){
+    private void welcome(NiuniuData data, Task task ,SocketResult socketResult){
         socketResult.setHead(2002);
+        String gameStatus = data.getGameStatus();
+        String runingNum = data.getRuningNum();
+        String userId = task.getPlayId();
+        Set<String> readyPlayers = data.getReadyPlayMap().get(runingNum);
+        List<String> pokes_4 = data.getPokesMap().get(runingNum).get(userId).subList(0,4);
+        socketResult.setGameStatus(gameStatus);
         //设置准备的玩家
         if (Objects.equals(gameStatus ,GameStatusEnum.READY.getCode()) ||
                 Objects.equals(gameStatus , GameStatusEnum.READY_COUNT_DOWN_START.getCode()) ||
@@ -183,132 +189,51 @@ public class JoinRoomEvent extends BaseEvent implements Event {
         }
         //设置玩家先发的4张牌
         else if (Objects.equals(gameStatus , GameStatusEnum.FA_FOUR_PAI.getCode())) {
-            socketResult.setReadyPlayerIds(readyPlayers);
-            if (readyPlayers.contains(userId)) {
-                setPoke_4(socketResult ,userId);
-            }
-            socketResult.setQiangZhuangMap(getQiangZhuangPlayers());
+            socketResult.setUserPokeList_4(pokes_4);
         }
-        //设置庄家
+        //设置抢庄的玩家
         else if (Objects.equals(gameStatus , GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_START.getCode()) ||
                     Objects.equals(gameStatus ,GameStatusEnum.QIANG_ZHUANG_COUNT_DOWN_END.getCode())) {
-            Set<String> readyPlayers = getReadyPlayers();
-            socketResult.setReadyPlayerIds(readyPlayers);
-            if (readyPlayers.contains(userId)) {
-                setPoke_4(socketResult ,userId);
-            }
-            socketResult.setZhuangJiaUserId(getZhuangJia());
-            socketResult.setXianJiaXiaZhuMap(getXianJiaXiaZhu());
+            socketResult.setUserPokeList_4(pokes_4);
+            socketResult.setQiangZhuangMap(data.getQiangZhuangMap().get(runingNum));
         }
-        //设置玩家发的最后一张牌
-        else if (Objects.equals(gameStatus , GameStatusEnum.BEFORE_CALRESULT.getCode())) {
-            socketResult.setGameStatus(4);
-            socketResult.setZhuangJiaUserId(getZhuangJia());
-            setPoke_5(socketResult);
-            socketResult.setTanPaiPlayerUserIds(getTanPaiPlayer());
-            setScoreAndPaiXing(socketResult);
+        //设置庄家
+        else if (Objects.equals(gameStatus , GameStatusEnum.QIANG_ZHUANG_ZHUAN_QUAN.getCode())) {
+            socketResult.setUserPokeList_4(pokes_4);
+            socketResult.setZhuangJiaUserId(data.getZhuangJiaMap().get(runingNum));
         }
-        //下一句准备
-        else if (Objects.equals(gameStatus , GameStatusEnum.BEFORE_DELETE_KEYS.getCode())) {
-            try {
-                Thread.sleep(300);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            socketResult.setGameStatus(1);
-            socketResult.setReadyPlayerIds(getReadyPlayers());
+        //设置玩家下注信息
+        else if (Objects.equals(gameStatus , GameStatusEnum.XIA_ZHU_COUNT_DOWN_START.getCode()) ||
+                Objects.equals(gameStatus ,GameStatusEnum.XIA_ZHU_COUNT_DOWN_END.getCode()) ||
+                Objects.equals(gameStatus , GameStatusEnum.DEFAULT_XIA_ZHU.getCode())) {
+            socketResult.setUserPokeList_4(pokes_4);
+            socketResult.setZhuangJiaUserId(data.getZhuangJiaMap().get(runingNum));
+            socketResult.setXianJiaXiaZhuMap(data.getXiaZhuMap().get(runingNum));
         }
-        socketService.sendMessage(playerId ,socketResult ,roomId);
-        return;
+        //设置最后一张牌
+        else if (Objects.equals(gameStatus , GameStatusEnum.FA_ONE_PAI.getCode())) {
+            setLastPoke(data ,runingNum ,socketResult);
+        }
+        //设置摊牌的玩家
+        else if (Objects.equals(gameStatus , GameStatusEnum.TAN_PAI_COUNT_DOWN_START.getCode()) ||
+                Objects.equals(gameStatus , GameStatusEnum.TAN_PAI_COUNT_DOWN_END.getCode())) {
+            setLastPoke(data ,runingNum ,socketResult);
+            socketResult.setTanPaiPlayerUserIds(data.getTanPaiMap().get(runingNum));
+        }
+        socketService.sendToUserMessage(userId ,socketResult ,task.getRoomId());
     }
 
-    /**
-     * 得到抢庄的玩家
-     * @return
-     */
-    private Map<String ,String> getQiangZhuangPlayers(){
-        Map<String ,String> qiangZhuangMap = redisService.getMap(RedisConstant.QIANGZHAUNG + roomId);
-        if (!qiangZhuangMap.isEmpty()) {
-            return qiangZhuangMap;
+    private void setLastPoke(NiuniuData data ,String runingNum ,SocketResult socketResult){
+        socketResult.setUserPokeMap_5(data.getPokesMap().get(runingNum));
+        socketResult.setZhuangJiaUserId(data.getZhuangJiaMap().get(runingNum));
+        socketResult.setXianJiaXiaZhuMap(data.getXiaZhuMap().get(runingNum));
+        socketResult.setScoreMap(data.getRuningScoreMap().get(runingNum));
+        Map<String ,Integer> map = Maps.newHashMap();
+        for (Map.Entry<String ,PaiXing> entry : data.getPaiXingMap().get(runingNum).entrySet()) {
+            map.put(entry.getKey() ,entry.getValue().getPaixing());
         }
-        return null;
-    }
-
-    /**
-     * 得到庄家
-     * @return
-     */
-    private String getZhuangJia(){
-        String zhuangJia = redisService.getValue(RedisConstant.ZHUANGJIA + roomId);
-        return zhuangJia;
-    }
-
-    /**
-     * 得到闲家下注
-     * @return
-     */
-    private Map<String ,String> getXianJiaXiaZhu(){
-        Map<String ,String> xianJiaXiaZhu = redisService.getMap(RedisConstant.XIANJIA_XIAZHU + roomId);
-        if (!xianJiaXiaZhu.isEmpty()) {
-            return xianJiaXiaZhu;
-        }
-        return null;
+        socketResult.setPaiXing(map);
     }
 
 
-    /**
-     * 设置得分和牌型
-     * @return
-     */
-    private void setScoreAndPaiXing(SocketResult socketResult){
-        //设置本局得分
-        Map<String ,String> scoreMap = redisService.getMap(RedisConstant.SCORE + roomId);
-        Map<String ,Integer> stringIntegerMap = Maps.newHashMap();
-        for (Map.Entry<String ,String> entry : scoreMap.entrySet()) {
-            stringIntegerMap.put(entry.getKey() ,Integer.valueOf(entry.getValue()));
-        }
-        socketResult.setScoreMap(stringIntegerMap);
-
-        Map<String ,String> paiXingMap = redisService.getMap(RedisConstant.PAI_XING + roomId);
-        Map<String ,Integer> paiXingIntegerMap = Maps.newHashMap();
-        for (Map.Entry<String ,String> entry : paiXingMap.entrySet()) {
-            paiXingIntegerMap.put(entry.getKey() , JsonUtil.parseJavaObject(entry.getValue() , PaiXing.class).getPaixing());
-
-        }
-        socketResult.setPaiXing(paiXingIntegerMap);
-    }
-
-    /**
-     * 设置4张牌
-     * @param socketResult
-     */
-    public void setPoke_4(SocketResult socketResult , String userId){
-        Map<String, String> map = redisService.getMap(RedisConstant.POKES + roomId);
-        Map<String ,List<String>> userPokeMap_5 = new HashMap<>(2<<4);
-        List<String> pokeList_4 = JsonUtil.parseJavaList(map.get(userId) ,String.class).subList(0 ,4);
-        socketResult.setUserPokeList_4(pokeList_4);
-    }
-
-
-
-    /**
-     * 设置5张牌
-     * @param socketResult
-     */
-    public void setPoke_5(SocketResult socketResult){
-        Map<String, String> map = redisService.getMap(RedisConstant.POKES + roomId);
-        Map<String ,List<String>> userPokeMap_5 = new HashMap<>(2<<4);
-        for (Map.Entry<String ,String> entry : map.entrySet()) {
-            userPokeMap_5.put(entry.getKey() , JsonUtil.parseJavaList(entry.getValue() ,String.class));
-        }
-        socketResult.setUserPokeMap_5(userPokeMap_5);
-    }
-
-    /**
-     * 得到摊牌的玩家
-     * @return
-     */
-    private Set<String> getTanPaiPlayer(){
-        return redisService.getSetMembers(RedisConstant.TANPAI + roomId);
-    }
 }

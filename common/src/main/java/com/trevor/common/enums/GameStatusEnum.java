@@ -30,7 +30,7 @@ public enum GameStatusEnum {
 
     JIE_SUAN("13" ,"本局结算"),
 
-    STOP_OR_CONTINUE("14" ,"下一局或者结束");
+    STOP("14" ,"结束");
 
     private String code ;
 

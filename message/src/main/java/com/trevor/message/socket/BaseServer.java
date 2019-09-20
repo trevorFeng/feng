@@ -1,12 +1,11 @@
 package com.trevor.message.socket;
 
 import com.trevor.common.service.RedisService;
-import com.trevor.message.core.GameCore;
 import com.trevor.message.core.TaskQueue;
 import com.trevor.message.feign.FriendManageFeignResult;
 import com.trevor.message.feign.RoomFeignResult;
 import com.trevor.message.feign.UserFeignResult;
-import com.trevor.message.service.NiuniuService;
+import com.trevor.message.socket.service.NiuniuService;
 import com.trevor.message.service.SocketService;
 import org.springframework.stereotype.Component;
 
@@ -23,9 +22,7 @@ public class BaseServer {
 
     protected static SocketService socketService;
 
-    protected GameCore gameCore;
-
-    protected TaskQueue taskQueue;
+    protected static TaskQueue taskQueue;
 
     protected static NiuniuService niuniuService;
 
@@ -64,6 +61,11 @@ public class BaseServer {
     @Resource
     public void setNiuniuService(NiuniuService niuniuService){
         BaseServer.niuniuService = niuniuService;
+    }
+
+    @Resource
+    public void setTaskQueue(TaskQueue taskQueue){
+        BaseServer.taskQueue = taskQueue;
     }
 
 }

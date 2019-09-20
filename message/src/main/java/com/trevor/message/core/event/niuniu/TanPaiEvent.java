@@ -20,14 +20,13 @@ public class TanPaiEvent extends BaseEvent implements Event {
         String gameStatus = data.getGameStatus();
         String playerId = task.getPlayId();
         String roomId = task.getRoomId();
-        String runingNum = data.getRuningNum();
-        Set<String> readyPlayers = data.getReadyPlayMap().get(runingNum);
-        Set<String> players = data.getPlayers();
         //状态信息
         if (!Objects.equals(gameStatus , GameStatusEnum.TAN_PAI_COUNT_DOWN_START.getCode())) {
             socketService.sendToUserMessage(playerId ,new SocketResult(-501) ,roomId);
             return;
         }
+        String runingNum = data.getRuningNum();
+        Set<String> readyPlayers = data.getReadyPlayMap().get(runingNum);
         if (!readyPlayers.contains(playerId)) {
             socketService.sendToUserMessage(playerId ,new SocketResult(-503) ,roomId);
             return;
@@ -36,6 +35,7 @@ public class TanPaiEvent extends BaseEvent implements Event {
         data.getTanPaiMap().get(runingNum).add(playerId);
 
         //广播摊牌的消息
+        Set<String> players = data.getPlayers();
         SocketResult socketResult = new SocketResult();
         socketResult.setHead(1014);
         socketResult.setUserId(playerId);
@@ -47,8 +47,8 @@ public class TanPaiEvent extends BaseEvent implements Event {
         if (Objects.equals(readyPlayerSize ,tanPaiSize)) {
             //删除摊牌倒计时监听器
             scheduleDispatch.removeCountDown(roomId);
-            //添加发一张牌事件
-            //taskQueue.addTask(new FaPai1Event(roomId));
+            //添加继续或者停止事件
+            taskQueue.addTask(roomId ,Task.getStopOrContinue(roomId));
         }
     }
 }

@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import java.util.List;
+
 @FeignClient("data")
 public interface UserFeign {
 
@@ -15,4 +17,7 @@ public interface UserFeign {
 
     @RequestMapping(value = "/api/user/{userId}", method = RequestMethod.GET)
     JsonEntity<Boolean> isFriendManage(@PathVariable("userId") Long userId);
+
+    @RequestMapping(value = "/api/user/{userId}", method = RequestMethod.GET)
+    JsonEntity<List<User>> findUsersByIds(@PathVariable("userId") List<Long> userIds);
 }

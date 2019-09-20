@@ -1,4 +1,4 @@
-package com.trevor.message.decoder;
+package com.trevor.message.socket.decoder;
 
 import com.alibaba.fastjson.JSON;
 import com.trevor.message.bo.SocketMessage;

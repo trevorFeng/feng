@@ -1,24 +1,19 @@
-package com.trevor.message.socket;
+package com.trevor.message.socket.impl;
 
-import com.google.common.collect.Maps;
-import com.trevor.common.bo.PaiXing;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.bo.WebKeys;
 import com.trevor.common.domain.mysql.Room;
 import com.trevor.common.domain.mysql.User;
-import com.trevor.common.enums.FriendManageEnum;
-import com.trevor.common.enums.GameStatusEnum;
-import com.trevor.common.enums.RoomTypeEnum;
-import com.trevor.common.enums.SpecialEnum;
 import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
 import com.trevor.common.util.ObjectUtil;
 import com.trevor.common.util.TokenUtil;
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.bo.Task;
-import com.trevor.message.decoder.NiuniuDecoder;
-import com.trevor.message.encoder.NiuniuEncoder;
+import com.trevor.message.socket.decoder.NiuniuDecoder;
+import com.trevor.message.socket.encoder.NiuniuEncoder;
+import com.trevor.message.socket.BaseServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +21,9 @@ import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 
 
@@ -61,28 +58,28 @@ public class NiuniuSocket extends BaseServer {
         //roomId合法性检查
         Room room = roomFeignResult.findRoomById(roomId);
         if (room == null) {
-            directSendMessage(new SocketResult(507) ,session);
+            directSendMessage(new SocketResult(507), session);
             close(session);
             return;
         }
         //是否激活,0为未激活,1为激活，2为房间使用完成后关闭，3为房间未使用关闭
-        if (!Objects.equals(room.getStatus() ,0) && !Objects.equals(room.getStatus() ,1)) {
-            directSendMessage(new SocketResult(506) ,session);
+        if (!Objects.equals(room.getStatus(), 0) && !Objects.equals(room.getStatus(), 1)) {
+            directSendMessage(new SocketResult(506), session);
             close(session);
             return;
         }
         //token合法性检查
         List<String> params = session.getRequestParameterMap().get(WebKeys.TOKEN);
         if (ObjectUtil.isEmpty(params)) {
-            directSendMessage(new SocketResult(400) ,session);
+            directSendMessage(new SocketResult(400), session);
             close(session);
             return;
         }
         String token = session.getRequestParameterMap().get(WebKeys.TOKEN).get(0);
         Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
-        User user = userFeignResult.findByOpenId((String) claims.get(WebKeys.OPEN_ID) ,(String) claims.get("hash"));
+        User user = userFeignResult.findByOpenId((String) claims.get(WebKeys.OPEN_ID), (String) claims.get("hash"));
         if (ObjectUtil.isEmpty(user)) {
-            directSendMessage(new SocketResult(404) ,session);
+            directSendMessage(new SocketResult(404), session);
             close(session);
             return;
         }
@@ -96,52 +93,8 @@ public class NiuniuSocket extends BaseServer {
         Boolean isFriendManage = userFeignResult.isFriendManage(room.getRoomAuth());
         //玩家是否是房主的好友
         Boolean roomAuthFriendAllow = friendManageFeignResult.findRoomAuthFriendAllow(room.getRoomAuth(), user.getId());
-        Task task = Task.getNiuniuJoinRoom(roomId ,isFriendManage ,roomAuthFriendAllow ,this ,user);
-        taskQueue.addTask(roomId ,task);
-
-
-
-        //检查房间是否满足人数要求
-        SocketResult soc = checkRoom(room ,user);
-        if (soc.getHead() != null) {
-            directSendMessage(soc ,session);
-            close(session);
-            return;
-        }
-        soc.setHead(1000);
-        /**
-         * 广播新人加入
-         */
-        if (!soc.getIsChiGuaPeople()) {
-            Map<String ,String> totalScoreMap = redisService.getMap(RedisConstant.TOTAL_SCORE + roomId);
-            soc.setTotalScore(totalScoreMap.get(userId) == null ? "0" : totalScoreMap.get(userId));
-            roomSocketService.broadcast(roomId ,soc);
-        }
-        //删除自己的消息队列
-        redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
-        //加入到广播的集合中
-        roomSocketService.join(roomId ,this);
-        /**
-         * 给自己发消息
-         */
-        Map<String ,String> baseRoomInfoMap = redisService.getMap(RedisConstant.BASE_ROOM_INFO + roomId);
-        Integer runingNum = NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.RUNING_NUM));
-        Integer totalNum =  NumberUtil.stringFormatInteger(baseRoomInfoMap.get(RedisConstant.TOTAL_NUM));
-        //设置房间正在运行的局数
-        soc.setRuningAndTotal((runingNum + 1) + "/" + totalNum);
-        //不是吃瓜群众则加入到真正的玩家集合中并且删除自己的掉线状态
-        if (!soc.getIsChiGuaPeople()) {
-            //加入到真正的玩家中
-            redisService.setAdd(RedisConstant.REAL_ROOM_PLAYER + roomId ,userId);
-            //删除自己掉线状态
-            redisService.setDeleteMember(RedisConstant.DIS_CONNECTION + roomId ,userId);
-        }
-        //设置掉线的玩家
-        soc.setDisConnectionPlayerIds(redisService.getSetMembers(RedisConstant.DIS_CONNECTION + roomId));
-        //设置真正的玩家
-        soc.setPlayers(roomSocketService.getRealRoomPlayerCount(this.roomId));
-        //发送房间状态消息
-        welcome(roomId ,soc);
+        Task task = Task.getNiuniuJoinRoom(roomId, isFriendManage, roomAuthFriendAllow, this, user);
+        taskQueue.addTask(roomId, task);
     }
 
     /**
@@ -172,13 +125,8 @@ public class NiuniuSocket extends BaseServer {
     public void onClose(){
         if (!ObjectUtil.isEmpty(userId)) {
             redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
-            //如果是真正的玩家则广播消息
-            if (redisService.getSetMembers(RedisConstant.REAL_ROOM_PLAYER + roomId).contains(userId)) {
-                redisService.setAdd(RedisConstant.DIS_CONNECTION + roomId ,userId);
-                SocketResult res = new SocketResult(1001 ,userId);
-                roomSocketService.broadcast(roomId ,res);
-            }
-
+            Task task = Task.getNiuniuDisConnection(roomId ,userId);
+            taskQueue.addTask(roomId ,task);
         }
     }
 

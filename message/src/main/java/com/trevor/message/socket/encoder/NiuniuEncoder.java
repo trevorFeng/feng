@@ -1,4 +1,4 @@
-package com.trevor.message.encoder;
+package com.trevor.message.socket.encoder;
 
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.util.JsonUtil;

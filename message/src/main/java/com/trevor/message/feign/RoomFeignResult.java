@@ -24,4 +24,12 @@ public class RoomFeignResult {
         }
 
     }
+
+    public void updateStatus(Long roomId ,Integer status ,Integer runingNum){
+
+    }
+
+    public void updateRuningNum(Long roomId ,Integer runingNum){
+
+    }
 }

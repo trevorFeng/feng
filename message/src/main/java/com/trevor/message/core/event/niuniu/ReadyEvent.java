@@ -1,10 +1,7 @@
 package com.trevor.message.core.event.niuniu;
 
-import com.google.common.collect.Sets;
-import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
 import com.trevor.common.enums.GameStatusEnum;
-import com.trevor.common.util.JsonUtil;
 import com.trevor.common.util.NumberUtil;
 import com.trevor.message.bo.CountDownFlag;
 import com.trevor.message.bo.NiuniuData;
@@ -15,6 +12,7 @@ import com.trevor.message.core.event.Event;
 import com.trevor.message.core.schedule.CountDownImpl;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -25,14 +23,14 @@ public class ReadyEvent extends BaseEvent implements Event {
     @Override
     public void execute(RoomData roomData , Task task){
         NiuniuData data = (NiuniuData) roomData;
+        String userId = task.getPlayId();
+        String roomId = task.getRoomId();
         //准备的人是否是真正的玩家
         if (!data.getRealPlayers().contains(task.getPlayId())) {
             SocketResult socketResult = new SocketResult(-502);
-            redisService.listRightPush(RedisConstant.MESSAGES_QUEUE + task.getPlayId() , JsonUtil.toJsonString(socketResult));
+            socketService.sendToUserMessage(userId ,socketResult ,roomId);
             return;
         }
-        String userId = task.getPlayId();
-        String roomId = task.getRoomId();
         //总局数
         String totalNum = data.getTotalNum();
         //当前局数
@@ -46,13 +44,12 @@ public class ReadyEvent extends BaseEvent implements Event {
             //判断是否是最后一局，不是得话就准备下一局
             if (Objects.equals(runingNum ,totalNum)) {
                 SocketResult socketResult = new SocketResult(-501);
-                redisService.listRightPush(RedisConstant.MESSAGES_QUEUE + task.getPlayId() , JsonUtil.toJsonString(socketResult));
+                socketService.sendToUserMessage(userId ,socketResult ,roomId);
                 return;
             }else {
                 String nextRuningNum = NumberUtil.stringFormatInteger(runingNum) + 1 + "";
-                Set<String> readySet = Sets.newHashSet();
-                readySet.add(userId);
-                data.getReadyPlayMap().put(nextRuningNum ,readySet);
+                data.getReadyPlayMap().putIfAbsent(nextRuningNum ,new HashSet<>());
+                data.getReadyPlayMap().get(runingNum).add(userId);
 
                 SocketResult socketResult = new SocketResult(1002);
                 socketResult.setUserId(userId);
@@ -64,7 +61,7 @@ public class ReadyEvent extends BaseEvent implements Event {
             //广播准备的消息
             SocketResult soc = new SocketResult();
             soc.setHead(1003);
-            soc.setReadyPlayerIds(redisService.getSetMembers(RedisConstant.getReadyPlayer(roomId, runingNum)));
+            soc.setReadyPlayerIds(data.getReadyPlayMap().get(runingNum));
             socketService.broadcast(roomId, soc ,players);
 
             //准备的人数超过两人

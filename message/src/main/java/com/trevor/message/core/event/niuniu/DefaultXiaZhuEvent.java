@@ -28,12 +28,13 @@ public class DefaultXiaZhuEvent extends BaseEvent implements Event {
         String roomId = data.getRoomId();
         Set<String> players = data.getPlayers();
         Set<String> readyPlayers = data.getReadyPlayMap().get(rungingNum);
+        //已经下注的玩家
         Collection<Integer> xiaZhuPlayers = data.getXiaZhuMap().get(rungingNum).values();
         String zhuangJiaPlayerId = data.getZhuangJiaMap().get(rungingNum);
-        Map<String ,String> map = Maps.newHashMap();
+        Map<String ,Integer> map = Maps.newHashMap();
         for (String s : readyPlayers) {
             if (!Objects.equals(s ,zhuangJiaPlayerId) && !xiaZhuPlayers.contains(s)) {
-                map.put(s ,"1");
+                map.put(s ,1);
             }
         }
         if (!map.isEmpty()) {

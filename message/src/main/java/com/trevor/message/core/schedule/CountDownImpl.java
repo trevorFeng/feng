@@ -33,7 +33,7 @@ public class CountDownImpl implements CountDownListener{
     @Override
     public void onCountDown() {
         if (time > 0) {
-            Task task = Task.getNiuniuCountDown(time ,roomId);
+            Task task = Task.getNiuniuCountDown(time ,roomId ,countDownFlag);
             taskQueue.addTask(roomId ,task);
             time--;
         }

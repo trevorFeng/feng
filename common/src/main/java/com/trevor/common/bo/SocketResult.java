@@ -39,7 +39,7 @@ public class SocketResult {
      * 1009--摊牌倒计时
      * 1010--某个玩家抢庄的消息
      * 1011--某个玩家下注的消息
-     * 1012--本局的结果
+     * 1012--本局的结算
      * 1013--本房间结束
      * 1014--摊牌的消息
      * 1015--玩家重新连接的消息
@@ -134,7 +134,7 @@ public class SocketResult {
     /**
      * 抢庄的玩家
      */
-    private Map<String ,String> qiangZhuangMap;
+    private Map<String ,Integer> qiangZhuangMap;
 
     /**
      * 用于控制前端抢庄的转圈的显示效果,有2个以上的值就转圈
@@ -149,7 +149,7 @@ public class SocketResult {
     /**
      * 闲家下注的相关信息
      */
-    private Map<String ,String> xianJiaXiaZhuMap;
+    private Map<String ,Integer> xianJiaXiaZhuMap;
 
     /**
      * 摊牌的玩家

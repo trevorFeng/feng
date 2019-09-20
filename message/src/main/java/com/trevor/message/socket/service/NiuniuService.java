@@ -1,9 +1,9 @@
-package com.trevor.message.service;
+package com.trevor.message.socket.service;
 
 import com.trevor.message.bo.SocketMessage;
 import com.trevor.message.bo.Task;
 import com.trevor.message.core.TaskQueue;
-import com.trevor.message.socket.NiuniuSocket;
+import com.trevor.message.socket.impl.NiuniuSocket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

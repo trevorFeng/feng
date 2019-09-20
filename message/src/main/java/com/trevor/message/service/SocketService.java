@@ -1,27 +1,20 @@
 package com.trevor.message.service;
 
-import com.google.common.collect.Lists;
-import com.trevor.common.bo.Player;
 import com.trevor.common.bo.RedisConstant;
 import com.trevor.common.bo.SocketResult;
-import com.trevor.common.domain.mysql.User;
 import com.trevor.common.service.RedisService;
-import com.trevor.common.service.UserService;
-import com.trevor.message.socket.NiuniuSocket;
+import com.trevor.message.bo.Task;
+import com.trevor.message.core.TaskQueue;
+import com.trevor.message.socket.impl.NiuniuSocket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
-import javax.websocket.RemoteEndpoint;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
 /**
  * @author trevor
@@ -33,14 +26,12 @@ public class SocketService {
 
     public static ConcurrentHashMap<String , NiuniuSocket> sockets = new ConcurrentHashMap<>(2<<11);
 
-    @Resource(name = "executor")
-    private Executor executor;
-
-    @Resource
-    private UserService userService;
 
     @Resource
     private RedisService redisService;
+
+    @Resource
+    private TaskQueue taskQueue;
 
     @PreDestroy
     public void destory(){
@@ -103,16 +94,19 @@ public class SocketService {
             NiuniuSocket s = sockets.get(socket.userId);
             s.close(socket.session);
             sockets.remove(socket.userId);
-            subRoomPlayer(roomId ,socket.userId);
+            //删除消息通道
+            redisService.delete(RedisConstant.MESSAGES_QUEUE + socket.userId);
+
+            Task task = Task.getLeave(roomId ,socket.userId);
+            taskQueue.addTask(roomId ,task);
         }
     }
 
     /**
      * 用户加入
-     * @param roomId
      * @param socket
      */
-    public void join(String roomId , NiuniuSocket socket){
+    public void join(NiuniuSocket socket){
         if (sockets.containsKey(socket.userId)) {
             NiuniuSocket s = sockets.get(socket.userId);
             sockets.remove(socket.userId);
@@ -121,19 +115,4 @@ public class SocketService {
         }
         sockets.put(socket.userId , socket);
     }
-
-    /**
-     * 减少玩家
-     * @param roomId
-     * @param userId
-     */
-    public void subRoomPlayer(String roomId ,String userId){
-        //移除玩家id
-        redisService.setDeleteMember(RedisConstant.ROOM_PLAYER + roomId ,userId);
-        //删除消息通道
-        redisService.delete(RedisConstant.MESSAGES_QUEUE + userId);
-    }
-
-
-
 }

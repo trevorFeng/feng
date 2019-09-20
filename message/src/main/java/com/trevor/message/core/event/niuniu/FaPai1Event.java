@@ -28,7 +28,6 @@ public class FaPai1Event extends BaseEvent implements Event {
         NiuniuData data = (NiuniuData) roomData;
         String roomId = data.getRoomId();
         String runingNum = data.getRuningNum();
-        Map<String ,Integer> scoreMap = new HashMap<>(2<<4);
         //计算得分,将用户的牌型放入paiXingMap,得分和总分放入scoreMap
         calcScore(data ,runingNum);
         //改变状态
@@ -40,7 +39,7 @@ public class FaPai1Event extends BaseEvent implements Event {
             userPokeMap_5.put(entry.getKey() ,entry.getValue());
         }
         SocketResult socketResult = new SocketResult(1008 , userPokeMap_5);
-        socketResult.setScoreMap(scoreMap);
+        socketResult.setScoreMap(data.getRuningScoreMap().get(runingNum));
 
 
         Map<String ,Integer> playerPaiXingMap = new HashMap<>();
