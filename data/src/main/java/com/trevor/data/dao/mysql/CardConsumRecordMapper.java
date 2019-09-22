@@ -21,5 +21,9 @@ public interface CardConsumRecordMapper {
      */
     Long insertOne(@Param("cardConsumRecord") CardConsumRecord cardConsumRecord);
 
-    void deleteByRoomRecordIds(@Param("roomRecordIds") List<Long> roomRecordIds);
+    /**
+     * 根据房间id删除
+     * @param roomIds
+     */
+    void deleteByRoomIds(@Param("roomIds") List<Long> roomIds);
 }

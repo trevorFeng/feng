@@ -1,11 +1,11 @@
-package com.trevor.data.service;
+package com.trevor.biz.service;
 
 import com.trevor.common.bo.Authentication;
 import com.trevor.common.bo.WebKeys;
+import com.trevor.common.dao.mysql.UserMapper;
 import com.trevor.common.domain.mysql.User;
 import com.trevor.common.util.ObjectUtil;
 import com.trevor.common.util.TokenUtil;
-import com.trevor.data.dao.mysql.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,12 +24,30 @@ public class UserService {
     @Resource
     private UserMapper userMapper;
 
-    public User findByOpenId(String openId ,String hash) {
-            User user = findUserByOpenid(openId);
+    /**
+     * token合法性检查
+     *
+     * @param token
+     * @throws IOException
+     */
+    public User getUserByToken(String token) {
+        try {
+            Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
+            String openid = (String) claims.get(WebKeys.OPEN_ID);
+            String hash = (String) claims.get("hash");
+            Long timestamp = (Long) claims.get("timestamp");
+            if (openid == null || hash == null || timestamp == null) {
+                return null;
+            }
+            User user = findUserByOpenid(openid);
             if (user == null || !Objects.equals(user.getHash(), hash)) {
                 return null;
             }
             return user;
+        }catch (Exception e) {
+            log.error("解析token错误，token：" + token);
+            return null;
+        }
 
     }
 
@@ -70,7 +88,7 @@ public class UserService {
 
 
     /**
-     * 根据openid查询用户，包含openid和hash字段
+     * 根据微信id查询用户，包含openid和hash字段
      * @param openid
      * @return
      */

@@ -1,10 +1,10 @@
 package com.trevor.biz.controller;
 
+import com.trevor.biz.service.CreateRoomService;
 import com.trevor.common.bo.JsonEntity;
 import com.trevor.common.domain.mongo.NiuniuRoomParam;
 import com.trevor.common.domain.mysql.User;
 import com.trevor.common.util.ThreadLocalUtil;
-import com.trevor.general.service.CreateRoomService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.trevor.common.dao.mysql.UserMapper">
+<mapper namespace="com.trevor.data.dao.mysql.UserMapper">
     <!-- 查询玩家是否开启好友管理功能,1为是，0为否 -->
     <select id="isFriendManage" resultType="java.lang.Integer">
         SELECT friend_manage_flag

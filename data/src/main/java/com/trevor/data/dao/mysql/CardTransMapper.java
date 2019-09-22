@@ -1,6 +1,6 @@
 package com.trevor.data.dao.mysql;
 
-import com.trevor.data.domain.mysql.CardTrans;
+import com.trevor.common.domain.mysql.CardTrans;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 

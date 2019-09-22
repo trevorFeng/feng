@@ -22,7 +22,7 @@ public class FriendManageController {
 
     @RequestMapping(value = "/api/friendManage/allow/{roomAuth}/{userId}", method = {RequestMethod.POST}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<Boolean> findRoomAuthFriendAllow(@PathVariable("roomAuth") Long roomAuth ,@PathVariable("userId") Long userId){
-        return ResponseHelper.createInstance(friendManageService.findRoomAuthFriendAllow(roomAuth ,userId) , MessageCodeEnum.HANDLER_SUCCESS);
+        return friendManageService.findRoomAuthFriendAllow(roomAuth ,userId);
     }
 
 }

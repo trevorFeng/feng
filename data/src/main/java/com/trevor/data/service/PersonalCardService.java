@@ -1,5 +1,8 @@
 package com.trevor.data.service;
 
+import com.trevor.common.bo.JsonEntity;
+import com.trevor.common.bo.ResponseHelper;
+import com.trevor.common.enums.MessageCodeEnum;
 import com.trevor.data.dao.mysql.PersonalCardMapper;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +24,7 @@ public class PersonalCardService {
      * @param userId
      * @return
      */
-    public Integer findCardNumByUserId(Long userId) {
-        return personalCardMapper.findCardNumByUserId(userId);
+    public JsonEntity<Integer> findCardNumByUserId(Long userId) {
+        return ResponseHelper.createInstance(personalCardMapper.findCardNumByUserId(userId) , MessageCodeEnum.HANDLER_SUCCESS);
     }
 }

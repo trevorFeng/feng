@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.trevor.common.dao.mysql.PersonalCardMapper">
+<mapper namespace="com.trevor.data.dao.mysql.PersonalCardMapper">
 
     <!-- 根据玩家id更新房卡数量 -->
     <update id="updatePersonalCardNum">

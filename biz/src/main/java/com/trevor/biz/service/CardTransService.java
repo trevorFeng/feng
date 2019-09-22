@@ -1,5 +1,6 @@
 package com.trevor.biz.service;
 
+import com.trevor.biz.feign.PersonalCardFeignResult;
 import com.trevor.common.bo.BizKeys;
 import com.trevor.common.bo.JsonEntity;
 import com.trevor.common.bo.ResponseHelper;
@@ -23,10 +24,10 @@ import java.util.Objects;
 public class CardTransService{
 
     @Resource
-    private CardTransMapper cardTransMapper;
+    private CardTransService cardTransService;
 
     @Resource
-    private PersonalCardMapper personalCardMapper;
+    private PersonalCardFeignResult personalCardFeignResult;
 
     /**
      * 生成房卡包
@@ -36,14 +37,14 @@ public class CardTransService{
     @Transactional(rollbackFor = Exception.class)
     public JsonEntity<String> createCardPackage(Integer cardNum , User user) {
         //判断玩家房卡数量是否大于交易的房卡数
-        Integer cardNumByUserId = personalCardMapper.findCardNumByUserId(user.getId());
+        Integer cardNumByUserId = personalCardFeignResult.findCardNumByUserId(user.getId());
         if (cardNumByUserId < cardNum) {
             return ResponseHelper.withErrorInstance(MessageCodeEnum.USER_ROOMCARD_NOT_ENOUGH);
         }
         //生成房卡交易，插入数据库
         CardTrans cardTrans = new CardTrans();
         cardTrans.generateCardTransBase(user,cardNum);
-        cardTransMapper.insertOne(cardTrans);
+        cardTransMapper.save(cardTrans);
         //减去玩家拥有的房卡数量
         personalCardMapper.updatePersonalCardNum(user.getId() ,cardNumByUserId - cardNum);
         return ResponseHelper.createInstance(cardTrans.getTransNum() ,MessageCodeEnum.CREATE_SUCCESS);

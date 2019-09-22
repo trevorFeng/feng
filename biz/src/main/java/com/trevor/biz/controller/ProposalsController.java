@@ -1,12 +1,12 @@
 package com.trevor.biz.controller;
 
+import com.trevor.biz.service.ProposalsService;
+import com.trevor.biz.service.UserService;
 import com.trevor.common.bo.Authentication;
 import com.trevor.common.bo.JsonEntity;
 import com.trevor.common.bo.ProposalContent;
 import com.trevor.common.domain.mysql.User;
-import com.trevor.common.service.UserService;
 import com.trevor.common.util.ThreadLocalUtil;
-import com.trevor.general.service.ProposalsService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;

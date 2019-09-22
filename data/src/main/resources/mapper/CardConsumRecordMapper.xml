@@ -10,13 +10,13 @@
         consum_num=#{cardConsumRecord.consumNum}
     </insert>
 
-    <delete id="deleteByRoomRecordIds">
+    <delete id="deleteByRoomIds">
         delete
         from
         card_consum_record
         where
         room_id in
-        <foreach collection="roomRecordIds" item="id"  open="(" separator="," close=")">
+        <foreach collection="roomIds" item="id"  open="(" separator="," close=")">
             #{id}
         </foreach>
     </delete>

@@ -1,9 +1,9 @@
 package com.trevor.biz.controller;
 
 
+import com.trevor.biz.service.RechargeRecordService;
 import com.trevor.common.bo.JsonEntity;
 import com.trevor.common.bo.RechargeCard;
-import com.trevor.general.service.RechargeRecordService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;

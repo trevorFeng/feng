@@ -21,11 +21,22 @@ public class UserController {
     @Resource
     private UserService userService;
 
+    /**
+     * 根据openid查询用户，只包含openid和hash字段
+     * @param openId
+     * @param hash
+     * @return
+     */
     @RequestMapping(value = "/api/user/{openId}/{hash}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<User> findByOpenid(@PathVariable("openId") String openId , @PathVariable("hash")String hash){
         return ResponseHelper.createInstance(userService.findByOpenId(openId , hash) ,MessageCodeEnum.HANDLER_SUCCESS);
     }
 
+    /**
+     * 查询玩家是否开启好友管理功能
+     * @param userId
+     * @return
+     */
     @RequestMapping(value = "/api/user/{userId}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<Boolean> isFriendManage(@PathVariable("userId") Long userId){
         return ResponseHelper.createInstance(userService.isFriendManage(userId) ,MessageCodeEnum.HANDLER_SUCCESS);
